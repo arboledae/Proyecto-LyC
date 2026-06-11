@@ -1,0 +1,4 @@
+inicio {
+  num x = 10
+  dec promedio = 9.5;
+}

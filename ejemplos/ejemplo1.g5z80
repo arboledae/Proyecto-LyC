@@ -1,0 +1,12 @@
+inicio {
+  num x = 10;
+  dec promedio = 9.5;
+  cuando (x > 5) {
+    imprimir("Mayor que 5");
+  } sino {
+    imprimir("Menor o igual");
+  }
+  loop (x > 0) {
+    x = x - 1;
+  }
+}
