@@ -1,0 +1,12 @@
+# Binarios compilados (plataforma-dependientes)
+analizador_lexico
+analizador_sintactico
+analizador_lexico.exe
+analizador_sintactico.exe
+compilador
+compilador.exe
+
+# Archivos de depuración y temporales
+*.o
+*.out
+.vscode/

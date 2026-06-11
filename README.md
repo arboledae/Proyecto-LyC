@@ -1,101 +1,179 @@
-# Analizador Sintáctico y Léxico en C (Flex & Bison)
+# Analizador Léxico y Sintáctico en C (Flex & Bison)
 
-Este proyecto corresponde a la implementación de la fase de análisis léxico y sintáctico (Parser) para nuestro lenguaje dummy, estructurado y adaptado según las especificaciones de la gramática libre de contexto (GLC) definida en el informe de laboratorio.
+Este proyecto corresponde a la implementación de la fase de análisis léxico (Lexer) y análisis sintáctico (Parser) para nuestro lenguaje de programación dummy (especificación del Grupo 5), diseñado utilizando las herramientas **Flex** y **Bison (YACC)** en lenguaje C.
 
 ---
 
 ## 📂 Estructura del Proyecto
 
-El proyecto está organizado de la siguiente manera:
-
 ```text
 Proyecto LyC/
 ├── src/
-│   ├── lexer.l                 # Especificación de tokens para Flex
-│   └── parser.y                # Especificación de gramática y punto de entrada para Bison
+│   ├── lexer.l                 # Especificación de reglas léxicas para Flex
+│   ├── parser.y                # Especificación de gramática y main del parser para Bison
+│   └── main_lexer.c            # Driver de pruebas exclusivo para el analizador léxico
 ├── ejemplos/
-│   ├── ejemplo1.g5z80          # Código de prueba sintácticamente válido
-│   └── ejemplo_con_error.g5z80 # Código de prueba con error de sintaxis intencional
-└── README.md                   # Este archivo explicativo con instrucciones
+│   ├── ejemplo1.g5z80          # Código fuente de prueba válido
+│   └── ejemplo_con_error.g5z80 # Código fuente de prueba con error de sintaxis intencional
+└── README.md                   # Documentación con instrucciones de uso
 ```
 
-### Descripción de los Archivos:
-
-*   **`src/lexer.l`**: Archivo de especificación léxica para Flex. Contiene las definiciones regulares y reglas de traducción para el reconocimiento de tokens de nuestro lenguaje (palabras clave como `inicio`, `sino`, variables, números, cadenas literales, operadores aritméticos, lógicos y relacionales). Reporta la línea y el carácter en caso de errores léxicos.
-*   **`src/parser.y`**: Archivo de especificación sintáctica para Bison (YACC). Define la gramática libre de contexto (GLC), resuelve la precedencia y asociatividad de los operadores para evitar ambigüedades, y contiene la lógica principal en `main()`. Reporta cualquier error sintáctico con precisión mediante `yyerror` indicando la línea correspondiente.
-*   **`ejemplos/ejemplo1.g5z80`**: Código fuente de prueba con sintaxis correcta que cubre variables, condicionales (`cuando` / `sino`), ciclos (`loop`) y llamadas de salida (`imprimir`).
-*   **`ejemplos/ejemplo_con_error.g5z80`**: Código de prueba intencionalmente erróneo (sin un punto y coma `;` final en la declaración de variable) que demuestra la capacidad del parser para detectar y señalar errores sintácticos.
+### Descripción de los Archivos Principales:
+*   **`src/lexer.l`**: Reglas de expresiones regulares para identificar palabras clave, identificadores, números, operadores y delimitadores.
+*   **`src/parser.y`**: Definición de la Gramática Libre de Contexto (GLC). Contiene la lógica del parser y la función `yyerror` para el manejo y reporte de errores sintácticos.
+*   **`src/main_lexer.c`**: Programa independiente que consume tokens uno por uno de un archivo fuente y los imprime en consola. Sirve para probar el lexer de manera independiente sin pasar por el análisis sintáctico.
 
 ---
 
 ## 🛠️ Prerrequisitos
 
-Para compilar y ejecutar este proyecto, necesitas tener instaladas las siguientes herramientas en tu sistema operativo Linux:
-
-- **Flex** (Generador de analizadores léxicos)
-- **Bison** (Generador de analizadores sintácticos)
-- **GCC** (Compilador de C)
-
-Si necesitas instalarlas en Debian/Ubuntu, puedes ejecutar:
+### En Linux (Debian/Ubuntu):
+Debes contar con `flex`, `bison` y `gcc`. Puedes instalarlos ejecutando:
 ```bash
 sudo apt-get update
 sudo apt-get install flex bison build-essential
 ```
 
+### En Windows:
+*   **Compilación Nativa**: Puedes usar **MinGW-w64** o **MSYS2** para obtener el compilador `gcc` en Windows.
+*   **Compilación Cruzada (desde Linux)**: Si estás en Linux y quieres generar los ejecutables `.exe` para Windows, instala el compilador cruzado:
+    ```bash
+    sudo apt-get install gcc-mingw-w64-x86-64
+    ```
+
 ---
 
-## 🚀 Instrucciones de Compilación y Ejecución Manual
+## 🚀 Fase 1: Generación de código intermedio (Bison & Flex)
 
-Sigue estos pasos en tu terminal para compilar el analizador manualmente desde la raíz de la carpeta `Proyecto LyC`:
+Antes de compilar en cualquier plataforma, debes generar los archivos fuente C (`lex.yy.c`, `parser.tab.c` y `parser.tab.h`) a partir de las especificaciones `.l` y `.y`. Ejecuta estos comandos en tu terminal de Linux:
 
-### Paso 1: Generar los analizadores con Flex y Bison
-Primero, compilamos las especificaciones para generar el código fuente C de los analizadores:
-
-1. **Generar el parser (Bison)**:
-   Este comando creará los archivos de soporte `src/parser.tab.c` y `src/parser.tab.h` (que contiene las declaraciones de tokens que usará el lexer).
+1. **Generar el Parser**:
    ```bash
    bison -d -o src/parser.tab.c src/parser.y
    ```
-
-2. **Generar el lexer (Flex)**:
-   Este comando generará el archivo `src/lex.yy.c` que implementa la función del escáner léxico.
+2. **Generar el Lexer**:
    ```bash
    flex -o src/lex.yy.c src/lexer.l
    ```
 
-### Paso 2: Compilar el Ejecutable Final con GCC
-Una vez generados los archivos C, compílalos y enlázalos en un ejecutable único llamado `compilador`:
+---
 
-```bash
-gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c -o compilador
-```
+## 💻 Instrucciones de Compilación
 
-### Paso 3: Ejecutar y Probar
+Una vez generados los archivos C en el directorio `src/`, procede con la compilación según tu plataforma:
 
-*   **Verificar que el parser acepte un código válido**:
+### 1. Compilación para Linux (GCC)
+
+*   **Compilar solo el Analizador Léxico (Lexer)**:
     ```bash
-    ./compilador ejemplos/ejemplo1.g5z80
+    gcc -Wall -Isrc src/main_lexer.c src/lex.yy.c -o analizador_lexico
     ```
-    **Salida esperada:**
-    ```text
-    ANALISIS SINTACTICO COMPLETADO EXITOSAMENTE
+*   **Compilar el Analizador Sintáctico completo (Parser)**:
+    ```bash
+    gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c -o analizador_sintactico
     ```
 
-*   **Verificar que el parser reporte errores de sintaxis correctamente**:
+### 2. Compilación para Windows
+
+#### Opción A: Compilación cruzada desde Linux (MinGW)
+Si estás en Linux y deseas generar los binarios para Windows:
+*   **Compilar el Analizador Léxico**:
     ```bash
-    ./compilador ejemplos/ejemplo_con_error.g5z80
+    x86_64-w64-mingw32-gcc -Wall -Isrc src/main_lexer.c src/lex.yy.c -o analizador_lexico.exe
     ```
-    **Salida esperada (en stderr):**
-    ```text
-    [ERROR SINTACTICO] Linea 3: syntax error
+*   **Compilar el Analizador Sintáctico**:
+    ```bash
+    x86_64-w64-mingw32-gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c -o analizador_sintactico.exe
+    ```
+
+#### Opción B: Compilación nativa en Windows (Cmd / PowerShell)
+Si ya tienes instalada la herramienta `gcc` en tu PATH de Windows, solo requieres compilar los archivos C previamente generados:
+*   **Compilar el Analizador Léxico**:
+    ```cmd
+    gcc -Wall -Isrc src/main_lexer.c src/lex.yy.c -o analizador_lexico.exe
+    ```
+*   **Compilar el Analizador Sintáctico**:
+    ```cmd
+    gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c -o analizador_sintactico.exe
     ```
 
 ---
 
-## 🧹 Limpieza
+## 🔍 Verificación del Funcionamiento
 
-Para remover los archivos intermedios generados por Flex/Bison y el binario ejecutable compilado, ejecuta el siguiente comando:
+### 1. Verificar que el Analizador Léxico (Lexer) funciona
+El ejecutable del lexer lee un archivo de entrada e imprime en pantalla la lista secuencial de todos los tokens reconocidos junto con su número de línea y lexema.
 
-```bash
-rm -f src/lex.yy.c src/parser.tab.c src/parser.tab.h compilador
+*   **Comando de ejecución (Linux)**:
+    ```bash
+    ./analizador_lexico ejemplos/ejemplo1.g5z80
+    ```
+*   **Comando de ejecución (Windows)**:
+    ```cmd
+    analizador_lexico.exe ejemplos\ejemplo1.g5z80
+    ```
+
+**Salida en consola esperada**:
+```text
+--- INICIANDO ANALISIS LEXICO DEL ARCHIVO ---
+
+[Linea 1] Token: KW_INICIO (258) | Lexema: "inicio"
+[Linea 1] Token: LLAVE_ABRIR (290) | Lexema: "{"
+[Linea 2] Token: KW_NUM (264) | Lexema: "num"
+[Linea 2] Token: ID (261) | Lexema: "x"
+[Linea 2] Token: OP_ASIG (262) | Lexema: "="
+...
+[Linea 12] Token: LLAVE_CERRAR (291) | Lexema: "}"
+
+--- ANALISIS LEXICO FINALIZADO ---
 ```
+
+---
+
+### 2. Verificar que el Analizador Sintáctico (Parser) funciona
+El parser analiza la sintaxis y verifica si cumple con la GLC del lenguaje.
+
+#### Prueba A: Código Sintácticamente Válido
+*   **Comando de ejecución (Linux)**:
+    ```bash
+    ./analizador_sintactico ejemplos/ejemplo1.g5z80
+    ```
+*   **Comando de ejecución (Windows)**:
+    ```cmd
+    analizador_sintactico.exe ejemplos\ejemplo1.g5z80
+    ```
+
+**Salida esperada**:
+```text
+ANALISIS SINTACTICO COMPLETADO EXITOSAMENTE
+```
+
+#### Prueba B: Código con Error Sintáctico
+*   **Comando de ejecución (Linux)**:
+    ```bash
+    ./analizador_sintactico ejemplos/ejemplo_con_error.g5z80
+    ```
+*   **Comando de ejecución (Windows)**:
+    ```cmd
+    analizador_sintactico.exe ejemplos\ejemplo_con_error.g5z80
+    ```
+
+**Salida en stderr esperada**:
+```text
+[ERROR SINTACTICO] Linea 3: syntax error
+```
+*(El error es arrojado en la línea 3 debido a la ausencia del punto y coma `;` al final de la declaración de la línea 2).*
+
+---
+
+## 🧹 Limpieza de Archivos Generados
+Para eliminar todos los ejecutables e intermedios generados, ejecuta:
+
+*   **En Linux**:
+    ```bash
+    rm -f src/lex.yy.c src/parser.tab.c src/parser.tab.h analizador_lexico analizador_lexico.exe analizador_sintactico analizador_sintactico.exe
+    ```
+*   **En Windows**:
+    ```cmd
+    del src\lex.yy.c src\parser.tab.c src\parser.tab.h analizador_lexico.exe analizador_sintactico.exe
+    ```
