@@ -13,6 +13,10 @@ Proyecto-LyC/
 │   ├── parser.y                # Gramática, acciones semánticas y main del compilador
 │   ├── ast.h                   # Definición de tipos y declaraciones del AST
 │   ├── ast.c                   # Implementación de nodos, impresión y liberación del AST
+│   ├── symbol_table.h          # Declaraciones de la tabla de símbolos
+│   ├── symbol_table.c          # Registro y búsqueda de símbolos por scope
+│   ├── semantic.h              # Declaración del analizador semántico
+│   ├── semantic.c              # Recorrido semántico del AST
 │   └── main_lexer.c            # Driver independiente para probar solo el analizador léxico
 ├── ejemplos/
 │   ├── ejemplo1.g5z80          # Código fuente de prueba válido
@@ -25,6 +29,8 @@ Proyecto-LyC/
 - **`src/parser.y`**: Gramática Libre de Contexto (GLC) del lenguaje. Contiene las acciones semánticas que construyen el AST y la función `yyerror` para el reporte de errores sintácticos.
 - **`src/ast.h`**: Declaración del enum `TipoNodo`, la estructura `NodoAST` y los prototipos de todos los constructores.
 - **`src/ast.c`**: Implementación de los constructores de nodos, la función `imprimir_ast` (impresión con indentación) y `liberar_ast` (liberación de memoria).
+- **`src/symbol_table.h` / `src/symbol_table.c`**: Definición e implementación de la tabla de símbolos. Registra variables, tipos y nivel de scope.
+- **`src/semantic.h` / `src/semantic.c`**: Analizador semántico que recorre el AST, registra declaraciones y detecta variables no declaradas o redeclaradas en el mismo scope.
 - **`src/main_lexer.c`**: Programa independiente que consume tokens uno por uno e imprime cada token con su número de línea y lexema. Sirve para probar el lexer sin pasar por el análisis sintáctico.
 
 ---
@@ -65,17 +71,17 @@ Esto genera `src/parser.tab.c`, `src/parser.tab.h` y `src/lex.yy.c`.
 
 **Linux:**
 ```bash
-gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c src/ast.c -o compilador
+gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c src/ast.c src/semantic.c src/symbol_table.c -o compilador
 ```
 
 **Windows (nativo):**
 ```cmd
-gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c src/ast.c -o compilador.exe
+gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c src/ast.c src/semantic.c src/symbol_table.c -o compilador.exe
 ```
 
 **Windows (compilación cruzada desde Linux):**
 ```bash
-x86_64-w64-mingw32-gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c src/ast.c -o compilador.exe
+x86_64-w64-mingw32-gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c src/ast.c src/semantic.c src/symbol_table.c -o compilador.exe
 ```
 
 ### 2. Compilar solo el Analizador Léxico

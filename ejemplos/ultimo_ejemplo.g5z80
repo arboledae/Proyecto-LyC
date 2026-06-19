@@ -1,0 +1,25 @@
+inicio {
+  num x = 10;
+  dec promedio = 9.5;
+  text mensaje = "Inicio del programa";
+
+  cuando (x > 5) {
+    num y = x + 2;
+    imprimir(mensaje);
+
+    loop (y > 0) {
+      num z = y - 1;
+      imprimir(z);
+      y = y - 1;
+    }
+
+    imprimir(y);
+  } sino {
+    text aviso = "x no es mayor que 5";
+    imprimir(aviso);
+  }
+
+  imprimir(x);
+  imprimir(promedio);
+  imprimir(y);
+}

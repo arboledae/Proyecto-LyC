@@ -1,5 +1,6 @@
+#line 1 "src/lex.yy.c"
 
-#line 3 "lex.yy.c"
+#line 3 "src/lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -536,14 +537,14 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "lexer.l"
-#line 2 "lexer.l"
+#line 1 "src/lexer.l"
+#line 2 "src/lexer.l"
 #include "parser.tab.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#line 546 "lex.yy.c"
-#line 547 "lex.yy.c"
+#line 546 "src/lex.yy.c"
+#line 547 "src/lex.yy.c"
 
 #define INITIAL 0
 
@@ -760,10 +761,10 @@ YY_DECL
 		}
 
 	{
-#line 19 "lexer.l"
+#line 19 "src/lexer.l"
 
 
-#line 767 "lex.yy.c"
+#line 767 "src/lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -833,201 +834,201 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 /* rule 1 can match eol */
 YY_RULE_SETUP
-#line 21 "lexer.l"
+#line 21 "src/lexer.l"
 { /* Ignorar */ }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 22 "lexer.l"
+#line 22 "src/lexer.l"
 { /* Ignorar */ }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 24 "lexer.l"
+#line 24 "src/lexer.l"
 { printf("[Lexico] Linea %d: Palabra clave 'inicio'\n",   yylineno); return KW_INICIO; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 25 "lexer.l"
+#line 25 "src/lexer.l"
 { printf("[Lexico] Linea %d: Palabra clave 'sino'\n",     yylineno); return KW_SINO; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 26 "lexer.l"
+#line 26 "src/lexer.l"
 { printf("[Lexico] Linea %d: Palabra clave 'cuando'\n",   yylineno); return KW_CUANDO; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 27 "lexer.l"
+#line 27 "src/lexer.l"
 { printf("[Lexico] Linea %d: Palabra clave 'loop'\n",     yylineno); return KW_LOOP; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 28 "lexer.l"
+#line 28 "src/lexer.l"
 { printf("[Lexico] Linea %d: Palabra clave 'imprimir'\n", yylineno); return KW_IMPRIMIR; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 29 "lexer.l"
+#line 29 "src/lexer.l"
 { printf("[Lexico] Linea %d: Palabra clave 'retornar'\n", yylineno); return KW_RETORNAR; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 30 "lexer.l"
+#line 30 "src/lexer.l"
 { printf("[Lexico] Linea %d: Tipo de dato 'num'\n",       yylineno); return KW_NUM; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 31 "lexer.l"
+#line 31 "src/lexer.l"
 { printf("[Lexico] Linea %d: Tipo de dato 'dec'\n",       yylineno); return KW_DEC; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 32 "lexer.l"
+#line 32 "src/lexer.l"
 { printf("[Lexico] Linea %d: Tipo de dato 'text'\n",      yylineno); return KW_TEXT; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 34 "lexer.l"
+#line 34 "src/lexer.l"
 { printf("[Lexico] Linea %d: Booleano 'verdadero'\n", yylineno); yylval.entero = 1; return LIT_BOOLEANO; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 35 "lexer.l"
+#line 35 "src/lexer.l"
 { printf("[Lexico] Linea %d: Booleano 'falso'\n",     yylineno); yylval.entero = 0; return LIT_BOOLEANO; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 37 "lexer.l"
+#line 37 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_IGUAL\n",        yylineno); return OP_IGUAL; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 38 "lexer.l"
+#line 38 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_DIFERENTE\n",    yylineno); return OP_DIFERENTE; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 39 "lexer.l"
+#line 39 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_MENOR_IGUAL\n",  yylineno); return OP_MENOR_IGUAL; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 40 "lexer.l"
+#line 40 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_MAYOR_IGUAL\n",  yylineno); return OP_MAYOR_IGUAL; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 41 "lexer.l"
+#line 41 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_MENOR\n",        yylineno); return OP_MENOR; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 42 "lexer.l"
+#line 42 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_MAYOR\n",        yylineno); return OP_MAYOR; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 44 "lexer.l"
+#line 44 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_AND\n",  yylineno); return OP_AND; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 45 "lexer.l"
+#line 45 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_OR\n",   yylineno); return OP_OR; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 46 "lexer.l"
+#line 46 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_NOT\n",  yylineno); return OP_NOT; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 48 "lexer.l"
+#line 48 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_SUMA\n",  yylineno); return OP_SUMA; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 49 "lexer.l"
+#line 49 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_RESTA\n", yylineno); return OP_RESTA; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 50 "lexer.l"
+#line 50 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_MULT\n",  yylineno); return OP_MULT; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 51 "lexer.l"
+#line 51 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_DIV\n",   yylineno); return OP_DIV; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 52 "lexer.l"
+#line 52 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_MOD\n",   yylineno); return OP_MOD; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 54 "lexer.l"
+#line 54 "src/lexer.l"
 { printf("[Lexico] Linea %d: Operador OP_ASIGNACION (=)\n", yylineno); return OP_ASIGNACION; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 56 "lexer.l"
+#line 56 "src/lexer.l"
 { printf("[Lexico] Linea %d: Delimitador DELIM_PUNTO_COMA\n", yylineno); return DELIM_PUNTO_COMA; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 57 "lexer.l"
+#line 57 "src/lexer.l"
 { printf("[Lexico] Linea %d: Delimitador DELIM_PAR_IZQ\n",   yylineno); return DELIM_PAR_IZQ; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 58 "lexer.l"
+#line 58 "src/lexer.l"
 { printf("[Lexico] Linea %d: Delimitador DELIM_PAR_DER\n",   yylineno); return DELIM_PAR_DER; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 59 "lexer.l"
+#line 59 "src/lexer.l"
 { printf("[Lexico] Linea %d: Delimitador DELIM_LLAVE_IZQ\n", yylineno); return DELIM_LLAVE_IZQ; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 60 "lexer.l"
+#line 60 "src/lexer.l"
 { printf("[Lexico] Linea %d: Delimitador DELIM_LLAVE_DER\n", yylineno); return DELIM_LLAVE_DER; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 62 "lexer.l"
+#line 62 "src/lexer.l"
 { printf("[Lexico] Linea %d: Decimal '%s'\n",      yylineno, yytext); yylval.str    = strdup(yytext); return LIT_DECIMAL; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 63 "lexer.l"
+#line 63 "src/lexer.l"
 { printf("[Lexico] Linea %d: Entero '%s'\n",       yylineno, yytext); yylval.entero = atoi(yytext);  return LIT_ENTERO; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 64 "lexer.l"
+#line 64 "src/lexer.l"
 { printf("[Lexico] Linea %d: Cadena de texto\n",   yylineno);         yylval.str    = strdup(yytext); return LIT_TEXT; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 65 "lexer.l"
+#line 65 "src/lexer.l"
 { printf("[Lexico] Linea %d: Identificador '%s'\n", yylineno, yytext); yylval.str   = strdup(yytext); return IDENTIFICADOR; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 67 "lexer.l"
+#line 67 "src/lexer.l"
 { printf("[ERROR LEXICO] Linea %d: Caracter no reconocido '%s'\n", yylineno, yytext); return TOKEN_ERROR; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 69 "lexer.l"
+#line 69 "src/lexer.l"
 ECHO;
 	YY_BREAK
-#line 1031 "lex.yy.c"
+#line 1031 "src/lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2044,5 +2045,5 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 69 "lexer.l"
+#line 69 "src/lexer.l"
 

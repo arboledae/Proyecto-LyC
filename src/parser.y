@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
+#include "semantic.h"
 
 extern int yylex();
 extern int yyparse();
@@ -14,6 +15,7 @@ extern FILE *yyin;
 extern int yylineno;
 
 void yyerror(const char *s);
+int analisis_semantico_ok = 1;
 
 int ends_with_g5z80(const char *filename) {
     int len = strlen(filename);
@@ -89,6 +91,7 @@ programa:
         printf("FIN DEL AST\n");
         printf("==================================================\n");
 
+        analisis_semantico_ok = analizar_semantica(raiz);
         liberar_ast(raiz);
     }
     ;
@@ -254,9 +257,15 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    if (yyparse() == 0) {
+    int resultado_parse = yyparse();
+
+    if (resultado_parse == 0 && analisis_semantico_ok) {
         printf("\n==================================================\n");
-        printf("ANALISIS SINTACTICO Y AST COMPLETADOS EXITOSAMENTE\n");
+        printf("ANALISIS SINTACTICO, AST Y SEMANTICO COMPLETADOS EXITOSAMENTE\n");
+        printf("==================================================\n");
+    } else if (analisis_semantico_ok == 0) {
+        printf("\n==================================================\n");
+        printf("ANALISIS CONCLUIDO CON ERRORES SEMANTICOS\n");
         printf("==================================================\n");
     } else {
         printf("\n==================================================\n");
@@ -265,5 +274,5 @@ int main(int argc, char **argv) {
     }
 
     fclose(yyin);
-    return 0;
+    return (resultado_parse == 0 && analisis_semantico_ok) ? 0 : 1;
 }
