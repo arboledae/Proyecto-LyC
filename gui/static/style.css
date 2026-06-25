@@ -1,0 +1,131 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f172a; --panel: #1e293b; --panel2: #273449;
+  --txt: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+  --ok: #4ade80; --err: #f87171; --warn: #fbbf24; --na:#64748b;
+  --kw:#c084fc; --lit:#4ade80; --op:#fb923c; --delim:#60a5fa; --id:#f1f5f9; --errtok:#f87171;
+}
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--txt); min-height: 100vh; display:flex; flex-direction:column; }
+
+/* ── Header + pipeline ── */
+header { background: linear-gradient(135deg,#1e293b,#0f172a); padding: 14px 24px; border-bottom: 1px solid #334155;
+  display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+header h1 { font-size: 1.3rem; }
+.grupo { background: var(--accent); color:#0f172a; padding: 2px 10px; border-radius: 12px; font-size:.75rem; font-weight:700; }
+.sub { color: var(--muted); font-size:.82rem; margin-top:3px; }
+
+.pipeline { display:flex; align-items:center; gap:8px; font-size:.85rem; }
+.pipeline .fase { background: var(--panel2); border:1px solid #475569; border-radius:20px; padding:6px 14px; font-weight:600; color: var(--muted); transition:.2s; }
+.pipeline .fase b { margin-left:4px; }
+.pipeline .fase.ok  { border-color: var(--ok);   color: var(--ok); }
+.pipeline .fase.err { border-color: var(--err);  color: var(--err); }
+.pipeline .fase.na  { border-color: var(--na);   color: var(--na); }
+.pipeline .flecha { color: var(--muted); }
+
+/* ── Layout ── */
+main { flex:1; display:grid; grid-template-columns: 1fr 1.3fr; gap: 16px; padding: 16px; max-width:1600px; width:100%; margin:0 auto; }
+.panel-editor, .panel-resultados { background: var(--panel); border-radius: 12px; padding: 14px; display:flex; flex-direction:column; min-height: 72vh; }
+.barra { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.barra .titulo { font-weight:600; color: var(--muted); }
+.ext { background:#0b1220; color:var(--accent); padding:1px 6px; border-radius:5px; font-size:.78rem; }
+.mini { background: var(--panel2); color: var(--txt); border:1px solid #475569; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:.82rem; }
+.mini:hover { border-color: var(--accent); }
+
+/* ── Editor con numeración ── */
+.editor-wrap { flex:1; display:flex; background:#0b1220; border:1px solid #334155; border-radius:8px; overflow:hidden; min-height:300px; }
+.editor-wrap:focus-within { border-color: var(--accent); }
+.gutter { width:42px; padding:12px 6px; text-align:right; color:#475569; background:#0a0f1a;
+  font-family:'Consolas','Courier New',monospace; font-size:.92rem; line-height:1.5; user-select:none; overflow:hidden; white-space:pre; }
+textarea { flex:1; background:transparent; color:#e2e8f0; border:none; padding:12px; resize:none;
+  font-family:'Consolas','Courier New',monospace; font-size:.92rem; line-height:1.5; white-space:pre; overflow:auto; }
+textarea:focus { outline:none; }
+
+.botones { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+.botones button { flex:1; min-width:110px; padding:10px 8px; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:.86rem; background: var(--panel2); color: var(--txt); transition:.15s; }
+.botones button:hover { background:#3b4d6b; }
+.botones .primario { background: var(--accent); color:#0f172a; }
+.botones .primario:hover { background:#7dd3fc; }
+
+.estado { margin-top:10px; font-size:.85rem; min-height:18px; }
+.estado.ok { color: var(--ok); } .estado.err { color: var(--err); } .estado.info { color: var(--accent); }
+
+/* ── Pestañas ── */
+.pestanas { display:flex; gap:4px; margin-bottom:12px; border-bottom:2px solid #334155; }
+.pest { background:none; border:none; color: var(--muted); padding:10px 16px; cursor:pointer; font-size:.92rem; font-weight:600; border-bottom:3px solid transparent; }
+.pest:hover { color: var(--txt); }
+.pest.activa { color: var(--accent); border-bottom-color: var(--accent); }
+.pill { background:#334155; color:var(--txt); border-radius:10px; padding:0 7px; font-size:.72rem; margin-left:2px; }
+
+.vista { display:none; flex:1; overflow:auto; }
+.vista.activa { display:block; }
+.vista h2 { font-size:1rem; margin: 8px 0 10px; color: var(--txt); }
+.resumen { font-size:.82rem; color: var(--muted); margin-bottom:10px; }
+.leyenda { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.aviso { color: var(--warn); background:#2a2412; border-left:4px solid var(--warn); padding:10px 12px; border-radius:6px; font-size:.88rem; }
+
+/* ── Tablas ── */
+.tabla-wrap { overflow:auto; border:1px solid #334155; border-radius:8px; }
+table { width:100%; border-collapse:collapse; font-size:.85rem; }
+thead th { background: var(--panel2); color: var(--muted); padding:8px; text-align:left; position:sticky; top:0; font-weight:600; }
+tbody td { padding:6px 8px; border-top:1px solid #334155; }
+tbody tr:hover { background:#243248; }
+td.num { color:var(--muted); }
+td.vacio { color:var(--muted); text-align:center; padding:14px; }
+.fila-err { background:#2a1414; }
+
+/* badges de categoria de token */
+.badge { padding:2px 8px; border-radius:10px; font-size:.74rem; font-weight:600; display:inline-block; }
+.cat-KW  { background:#3b1d5e; color:var(--kw); }
+.cat-LIT { background:#13331f; color:var(--lit); }
+.cat-OP  { background:#3d2410; color:var(--op); }
+.cat-DELIM{ background:#102447; color:var(--delim); }
+.cat-ID  { background:#1e293b; color:var(--id); border:1px solid #334155; }
+.cat-ERR { background:#3b1212; color:var(--errtok); }
+
+/* tipos y scopes en tabla de simbolos */
+.tipo { padding:1px 8px; border-radius:8px; font-size:.76rem; font-weight:600; }
+.tipo-num { background:#102447; color:var(--delim); }
+.tipo-dec { background:#13331f; color:var(--lit); }
+.tipo-text{ background:#3d2410; color:var(--op); }
+.scope { padding:1px 8px; border-radius:8px; font-size:.76rem; font-weight:600; }
+.scope-0 { background:#1e3a5f; color:var(--accent); }
+.scope-1 { background:#3b1d5e; color:var(--kw); }
+.scope-2 { background:#13331f; color:var(--lit); }
+.scope-3 { background:#3d2410; color:var(--op); }
+.scope-4 { background:#3b1212; color:var(--errtok); }
+.scope-5 { background:#2a2412; color:var(--warn); }
+
+/* ── Árbol AST ── */
+.arbol { font-family:'Consolas',monospace; font-size:.86rem; line-height:1.6; }
+.arbol ul { list-style:none; padding-left:20px; border-left:1px dashed #334155; }
+.arbol > ul { padding-left:0; border-left:none; }
+.arbol li { position:relative; padding-left:12px; }
+.arbol li::before { content:"├─"; color: #475569; position:absolute; left:-8px; }
+.arbol > ul > li::before { content:""; }
+.arbol .nodo { display:inline-block; padding:2px 8px; margin:2px 0; border-radius:6px; background: var(--panel2); border:1px solid #475569; cursor:pointer; }
+.arbol li.hoja .nodo { cursor:default; }
+.arbol li.colapsado > ul { display:none; }
+.arbol li.colapsado > .nodo::after { content:" ⋯"; color:var(--warn); }
+.arbol .nodo.prog { background:#1e3a5f; border-color:var(--accent); color:var(--accent); font-weight:700; }
+.arbol .nodo.ctrl { background:#2a2150; border-color:var(--kw); color:var(--kw); }
+.arbol .nodo.decl { background:#0e2a3f; border-color:var(--delim); color:var(--delim); }
+.arbol .nodo.op   { color:var(--op); border-color:var(--op); }
+.arbol .nodo.lit  { color:var(--lit); border-color:#2f5b3c; }
+.arbol .nodo.id   { color:var(--id); }
+
+/* ── Diagnósticos ── */
+.errores { list-style:none; }
+.errores li { padding:8px 12px; margin-bottom:6px; border-radius:6px; font-size:.86rem; border-left:4px solid var(--err); background:#2a1414; }
+.errores li.ok { border-left-color: var(--ok); background:#13261b; color:var(--ok); }
+.errores li.err-lexico { border-left-color: var(--errtok); }
+.errores li.err-sintactico { border-left-color: var(--warn); background:#2a2412; }
+.errores li.err-semantico { border-left-color: var(--err); }
+.errores li .lin { font-weight:700; color:var(--warn); margin:0 6px; }
+.tag { font-size:.7rem; font-weight:700; padding:1px 7px; border-radius:8px; }
+.tag-lexico { background:#3b1212; color:var(--errtok); }
+.tag-sintactico { background:#3a3110; color:var(--warn); }
+.tag-semantico { background:#3b1d2a; color:#fb7185; }
+
+footer { text-align:center; padding:14px; color: var(--muted); font-size:.78rem; border-top:1px solid #334155; }
+
+@media (max-width: 900px) { main { grid-template-columns: 1fr; } .pipeline { width:100%; justify-content:center; } }

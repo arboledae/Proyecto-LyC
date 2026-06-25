@@ -10,3 +10,9 @@ compilador.exe
 *.o
 *.out
 .vscode/
+__pycache__/
+*.pyc
+
+# Artefactos del build del instalador de Windows
+installer/python/
+installer/Output/

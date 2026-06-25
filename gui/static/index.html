@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compilador Dummy — Analizador Léxico / Sintáctico / Semántico</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="titulo-app">
+      <h1>🛠️ Compilador Dummy <span class="grupo">Grupo 5</span></h1>
+      <p class="sub">Verificador de los niveles de análisis · Léxico · Sintáctico · Semántico</p>
+    </div>
+    <div class="pipeline" id="pipeline">
+      <span class="fase" data-fase="lexico">① Léxico <b>—</b></span>
+      <span class="flecha">→</span>
+      <span class="fase" data-fase="sintactico">② Sintáctico <b>—</b></span>
+      <span class="flecha">→</span>
+      <span class="fase" data-fase="semantico">③ Semántico <b>—</b></span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Columna izquierda: editor -->
+    <section class="panel-editor">
+      <div class="barra">
+        <span class="titulo">Código fuente <code class="ext">.g5z80</code></span>
+        <div class="barra-acc">
+          <select id="sel-ejemplo" class="mini" title="Cargar un ejemplo"></select>
+        </div>
+      </div>
+      <div class="editor-wrap">
+        <pre id="gutter" class="gutter" aria-hidden="true"></pre>
+        <textarea id="codigo" spellcheck="false" wrap="off"
+                  placeholder="Escribe aquí tu código Dummy..."></textarea>
+      </div>
+      <div class="botones">
+        <button id="btn-lexico">🔍 Léxico</button>
+        <button id="btn-sintactico">🌳 Sintáctico</button>
+        <button id="btn-semantico">✅ Semántico</button>
+        <button id="btn-todo" class="primario">⚡ Analizar Todo</button>
+      </div>
+      <div id="estado" class="estado"></div>
+    </section>
+
+    <!-- Columna derecha: resultados -->
+    <section class="panel-resultados">
+      <nav class="pestanas">
+        <button class="pest activa" data-vista="lexico">Léxico <span id="cont-lexico" class="pill"></span></button>
+        <button class="pest" data-vista="sintactico">Sintáctico <span id="cont-sintactico" class="pill"></span></button>
+        <button class="pest" data-vista="semantico">Semántico <span id="cont-semantico" class="pill"></span></button>
+      </nav>
+
+      <!-- LÉXICO -->
+      <div id="vista-lexico" class="vista activa">
+        <h2>Tokens reconocidos</h2>
+        <div id="leyenda-lexico" class="leyenda"></div>
+        <div class="tabla-wrap">
+          <table id="tabla-tokens">
+            <thead><tr><th>#</th><th>Línea</th><th>Token</th><th>Lexema</th><th>Categoría</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SINTÁCTICO -->
+      <div id="vista-sintactico" class="vista">
+        <h2>Árbol de Sintaxis Abstracta (AST)</h2>
+        <div id="resumen-sintactico" class="resumen"></div>
+        <div id="arbol-ast" class="arbol"></div>
+      </div>
+
+      <!-- SEMÁNTICO -->
+      <div id="vista-semantico" class="vista">
+        <h2>Tabla de Símbolos</h2>
+        <div id="resumen-semantico" class="resumen"></div>
+        <div class="tabla-wrap">
+          <table id="tabla-simbolos">
+            <thead><tr><th>Nombre</th><th>Tipo</th><th>Ámbito</th><th>Línea</th><th>Inicializado</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <h2>Diagnósticos</h2>
+        <ul id="lista-errores" class="errores"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>Universidad Nacional Mayor de San Marcos · Lenguajes y Compiladores · Grupo 5
+      · Lenguaje <b>Dummy</b> (próxima fase: generación de código Z80)</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

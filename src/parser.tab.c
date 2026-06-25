@@ -67,12 +67,15 @@
 
 
 /* First part of user prologue.  */
-#line 5 "parser.y"
+#line 5 "src/parser.y"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
+#include "simbolos.h"
+#include "semantico.h"
+#include "gui_salida.h"
 
 extern int yylex();
 extern int yyparse();
@@ -80,6 +83,24 @@ extern FILE *yyin;
 extern int yylineno;
 
 void yyerror(const char *s);
+
+/* ── Modo de salida ──────────────────────────────────────────
+   modo_gui = 1  -> el compilador emite el formato delimitado (@@...)
+                    que consume la interfaz grafica (sin JSON en C).
+   modo_gui = 0  -> salida legible para consola (comportamiento normal). */
+int modo_gui = 0;
+
+/* lexer_verbose lo define el lexer (lex.yy.c). En modo --gui se apaga
+   para que el flujo solo contenga las secciones @@. */
+extern int lexer_verbose;
+
+/* Estado del error sintactico capturado (para el modo --gui). */
+static int  hubo_error_sint = 0;
+static int  linea_error_sint = 0;
+static char msg_error_sint[256] = "";
+
+/* Resultado del semantico capturado antes de liberar las estructuras. */
+static int sem_con_errores = 0;
 
 int ends_with_g5z80(const char *filename) {
     int len = strlen(filename);
@@ -93,7 +114,7 @@ int ends_with_g5z80(const char *filename) {
             (ext[5] == '0'));
 }
 
-#line 97 "parser.tab.c"
+#line 118 "src/parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -562,13 +583,13 @@ static const yytype_int8 yytranslate[] =
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_int16 yyrline[] =
 {
-       0,    79,    79,    97,   102,   108,   109,   110,   111,   112,
-     113,   117,   121,   128,   129,   130,   134,   141,   146,   155,
-     163,   170,   174,   181,   185,   189,   193,   197,   204,   205,
-     206,   207,   208,   209,   213,   214,   215,   216,   217,   218,
-     219,   220,   221,   222,   223,   224
+       0,   100,   100,   140,   145,   151,   152,   153,   154,   155,
+     156,   160,   164,   171,   172,   173,   177,   184,   189,   198,
+     206,   213,   217,   224,   228,   232,   236,   240,   247,   248,
+     249,   250,   251,   252,   256,   257,   258,   259,   260,   261,
+     262,   263,   264,   265,   266,   267
 };
 #endif
 
@@ -1190,316 +1211,338 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* programa: KW_INICIO DELIM_LLAVE_IZQ sentencias DELIM_LLAVE_DER  */
-#line 80 "parser.y"
+#line 101 "src/parser.y"
     {
         NodoAST *raiz = nuevo_nodo(NODO_PROGRAMA);
         raiz->izq = (yyvsp[-1].nodo);
 
-        printf("\n==================================================\n");
-        printf("ARBOL DE SINTAXIS ABSTRACTA (AST)\n");
-        printf("==================================================\n\n");
-        imprimir_ast(raiz, 0);
-        printf("\n==================================================\n");
-        printf("FIN DEL AST\n");
-        printf("==================================================\n");
+        if (modo_gui) {
+            /* Salida delimitada para la interfaz grafica. */
+            printf("@@AST\n");
+            emitir_ast_gui(raiz);
 
+            analizar_semantico(raiz);
+            sem_con_errores = hay_errores_sem();
+
+            printf("@@SIMBOLOS\n");
+            emitir_simbolos_gui();
+            printf("@@ERRORES\n");
+            emitir_errores_gui();
+        } else {
+            /* Salida legible para consola. */
+            printf("\n==================================================\n");
+            printf("ARBOL DE SINTAXIS ABSTRACTA (AST)\n");
+            printf("==================================================\n\n");
+            imprimir_ast(raiz, 0);
+            printf("\n==================================================\n");
+            printf("FIN DEL AST\n");
+            printf("==================================================\n");
+
+            /* Analisis semantico: tabla de simbolos + verificacion de tipos */
+            analizar_semantico(raiz);
+            imprimir_tabla();
+            imprimir_errores_sem();
+        }
+
+        liberar_errores_sem();
+        liberar_tabla();
         liberar_ast(raiz);
     }
-#line 1209 "parser.tab.c"
+#line 1252 "src/parser.tab.c"
     break;
 
   case 3: /* sentencias: sentencia sentencias  */
-#line 98 "parser.y"
+#line 141 "src/parser.y"
     {
         (yyval.nodo) = nodo_lista((yyvsp[-1].nodo), (yyvsp[0].nodo));
     }
-#line 1217 "parser.tab.c"
+#line 1260 "src/parser.tab.c"
     break;
 
   case 4: /* sentencias: %empty  */
-#line 102 "parser.y"
+#line 145 "src/parser.y"
     {
         (yyval.nodo) = NULL;
     }
-#line 1225 "parser.tab.c"
+#line 1268 "src/parser.tab.c"
     break;
 
   case 5: /* sentencia: declaracion DELIM_PUNTO_COMA  */
-#line 108 "parser.y"
+#line 151 "src/parser.y"
                                     { (yyval.nodo) = (yyvsp[-1].nodo); }
-#line 1231 "parser.tab.c"
+#line 1274 "src/parser.tab.c"
     break;
 
   case 6: /* sentencia: asignacion DELIM_PUNTO_COMA  */
-#line 109 "parser.y"
+#line 152 "src/parser.y"
                                     { (yyval.nodo) = (yyvsp[-1].nodo); }
-#line 1237 "parser.tab.c"
+#line 1280 "src/parser.tab.c"
     break;
 
   case 7: /* sentencia: condicional  */
-#line 110 "parser.y"
+#line 153 "src/parser.y"
                                     { (yyval.nodo) = (yyvsp[0].nodo); }
-#line 1243 "parser.tab.c"
+#line 1286 "src/parser.tab.c"
     break;
 
   case 8: /* sentencia: ciclo  */
-#line 111 "parser.y"
+#line 154 "src/parser.y"
                                     { (yyval.nodo) = (yyvsp[0].nodo); }
-#line 1249 "parser.tab.c"
+#line 1292 "src/parser.tab.c"
     break;
 
   case 9: /* sentencia: impresion DELIM_PUNTO_COMA  */
-#line 112 "parser.y"
+#line 155 "src/parser.y"
                                     { (yyval.nodo) = (yyvsp[-1].nodo); }
-#line 1255 "parser.tab.c"
+#line 1298 "src/parser.tab.c"
     break;
 
   case 10: /* sentencia: retorno DELIM_PUNTO_COMA  */
-#line 113 "parser.y"
+#line 156 "src/parser.y"
                                     { (yyval.nodo) = (yyvsp[-1].nodo); }
-#line 1261 "parser.tab.c"
+#line 1304 "src/parser.tab.c"
     break;
 
   case 11: /* declaracion: tipo IDENTIFICADOR OP_ASIGNACION expresion  */
-#line 118 "parser.y"
+#line 161 "src/parser.y"
     {
         (yyval.nodo) = nodo_declaracion((yyvsp[-3].str), (yyvsp[-2].str), (yyvsp[0].nodo));
     }
-#line 1269 "parser.tab.c"
+#line 1312 "src/parser.tab.c"
     break;
 
   case 12: /* declaracion: tipo IDENTIFICADOR  */
-#line 122 "parser.y"
+#line 165 "src/parser.y"
     {
         (yyval.nodo) = nodo_declaracion((yyvsp[-1].str), (yyvsp[0].str), NULL);
     }
-#line 1277 "parser.tab.c"
+#line 1320 "src/parser.tab.c"
     break;
 
   case 13: /* tipo: KW_NUM  */
-#line 128 "parser.y"
+#line 171 "src/parser.y"
               { (yyval.str) = "num";  }
-#line 1283 "parser.tab.c"
+#line 1326 "src/parser.tab.c"
     break;
 
   case 14: /* tipo: KW_DEC  */
-#line 129 "parser.y"
+#line 172 "src/parser.y"
               { (yyval.str) = "dec";  }
-#line 1289 "parser.tab.c"
+#line 1332 "src/parser.tab.c"
     break;
 
   case 15: /* tipo: KW_TEXT  */
-#line 130 "parser.y"
+#line 173 "src/parser.y"
               { (yyval.str) = "text"; }
-#line 1295 "parser.tab.c"
+#line 1338 "src/parser.tab.c"
     break;
 
   case 16: /* asignacion: IDENTIFICADOR OP_ASIGNACION expresion  */
-#line 135 "parser.y"
+#line 178 "src/parser.y"
     {
         (yyval.nodo) = nodo_asignacion((yyvsp[-2].str), (yyvsp[0].nodo));
     }
-#line 1303 "parser.tab.c"
+#line 1346 "src/parser.tab.c"
     break;
 
   case 17: /* condicional: KW_CUANDO DELIM_PAR_IZQ condicion DELIM_PAR_DER DELIM_LLAVE_IZQ sentencias DELIM_LLAVE_DER  */
-#line 143 "parser.y"
+#line 186 "src/parser.y"
     {
         (yyval.nodo) = nodo_condicional((yyvsp[-4].nodo), (yyvsp[-1].nodo), NULL);
     }
-#line 1311 "parser.tab.c"
+#line 1354 "src/parser.tab.c"
     break;
 
   case 18: /* condicional: KW_CUANDO DELIM_PAR_IZQ condicion DELIM_PAR_DER DELIM_LLAVE_IZQ sentencias DELIM_LLAVE_DER KW_SINO DELIM_LLAVE_IZQ sentencias DELIM_LLAVE_DER  */
-#line 149 "parser.y"
+#line 192 "src/parser.y"
     {
         (yyval.nodo) = nodo_condicional((yyvsp[-8].nodo), (yyvsp[-5].nodo), (yyvsp[-1].nodo));
     }
-#line 1319 "parser.tab.c"
+#line 1362 "src/parser.tab.c"
     break;
 
   case 19: /* ciclo: KW_LOOP DELIM_PAR_IZQ condicion DELIM_PAR_DER DELIM_LLAVE_IZQ sentencias DELIM_LLAVE_DER  */
-#line 157 "parser.y"
+#line 200 "src/parser.y"
     {
         (yyval.nodo) = nodo_ciclo((yyvsp[-4].nodo), (yyvsp[-1].nodo));
     }
-#line 1327 "parser.tab.c"
+#line 1370 "src/parser.tab.c"
     break;
 
   case 20: /* impresion: KW_IMPRIMIR DELIM_PAR_IZQ expresion DELIM_PAR_DER  */
-#line 164 "parser.y"
+#line 207 "src/parser.y"
     {
         (yyval.nodo) = nodo_impresion((yyvsp[-1].nodo));
     }
-#line 1335 "parser.tab.c"
+#line 1378 "src/parser.tab.c"
     break;
 
   case 21: /* retorno: KW_RETORNAR expresion  */
-#line 171 "parser.y"
+#line 214 "src/parser.y"
     {
         (yyval.nodo) = nodo_retorno((yyvsp[0].nodo));
     }
-#line 1343 "parser.tab.c"
+#line 1386 "src/parser.tab.c"
     break;
 
   case 22: /* retorno: KW_RETORNAR  */
-#line 175 "parser.y"
+#line 218 "src/parser.y"
     {
         (yyval.nodo) = nodo_retorno(NULL);
     }
-#line 1351 "parser.tab.c"
+#line 1394 "src/parser.tab.c"
     break;
 
   case 23: /* condicion: expresion operador_rel expresion  */
-#line 182 "parser.y"
+#line 225 "src/parser.y"
     {
         (yyval.nodo) = nodo_op_binario((yyvsp[-1].str), (yyvsp[-2].nodo), (yyvsp[0].nodo));
     }
-#line 1359 "parser.tab.c"
+#line 1402 "src/parser.tab.c"
     break;
 
   case 24: /* condicion: OP_NOT condicion  */
-#line 186 "parser.y"
+#line 229 "src/parser.y"
     {
         (yyval.nodo) = nodo_op_unario("!", (yyvsp[0].nodo));
     }
-#line 1367 "parser.tab.c"
+#line 1410 "src/parser.tab.c"
     break;
 
   case 25: /* condicion: condicion OP_AND condicion  */
-#line 190 "parser.y"
+#line 233 "src/parser.y"
     {
         (yyval.nodo) = nodo_op_binario("&&", (yyvsp[-2].nodo), (yyvsp[0].nodo));
     }
-#line 1375 "parser.tab.c"
+#line 1418 "src/parser.tab.c"
     break;
 
   case 26: /* condicion: condicion OP_OR condicion  */
-#line 194 "parser.y"
+#line 237 "src/parser.y"
     {
         (yyval.nodo) = nodo_op_binario("||", (yyvsp[-2].nodo), (yyvsp[0].nodo));
     }
-#line 1383 "parser.tab.c"
+#line 1426 "src/parser.tab.c"
     break;
 
   case 27: /* condicion: LIT_BOOLEANO  */
-#line 198 "parser.y"
+#line 241 "src/parser.y"
     {
         (yyval.nodo) = nodo_booleano((yyvsp[0].entero));
     }
-#line 1391 "parser.tab.c"
+#line 1434 "src/parser.tab.c"
     break;
 
   case 28: /* operador_rel: OP_MAYOR  */
-#line 204 "parser.y"
+#line 247 "src/parser.y"
                      { (yyval.str) = ">"; }
-#line 1397 "parser.tab.c"
+#line 1440 "src/parser.tab.c"
     break;
 
   case 29: /* operador_rel: OP_MENOR  */
-#line 205 "parser.y"
+#line 248 "src/parser.y"
                      { (yyval.str) = "<"; }
-#line 1403 "parser.tab.c"
+#line 1446 "src/parser.tab.c"
     break;
 
   case 30: /* operador_rel: OP_MAYOR_IGUAL  */
-#line 206 "parser.y"
+#line 249 "src/parser.y"
                      { (yyval.str) = ">="; }
-#line 1409 "parser.tab.c"
+#line 1452 "src/parser.tab.c"
     break;
 
   case 31: /* operador_rel: OP_MENOR_IGUAL  */
-#line 207 "parser.y"
+#line 250 "src/parser.y"
                      { (yyval.str) = "<="; }
-#line 1415 "parser.tab.c"
+#line 1458 "src/parser.tab.c"
     break;
 
   case 32: /* operador_rel: OP_IGUAL  */
-#line 208 "parser.y"
+#line 251 "src/parser.y"
                      { (yyval.str) = "=="; }
-#line 1421 "parser.tab.c"
+#line 1464 "src/parser.tab.c"
     break;
 
   case 33: /* operador_rel: OP_DIFERENTE  */
-#line 209 "parser.y"
+#line 252 "src/parser.y"
                      { (yyval.str) = "!="; }
-#line 1427 "parser.tab.c"
+#line 1470 "src/parser.tab.c"
     break;
 
   case 34: /* expresion: expresion OP_SUMA expresion  */
-#line 213 "parser.y"
+#line 256 "src/parser.y"
                                                { (yyval.nodo) = nodo_op_binario("+",  (yyvsp[-2].nodo), (yyvsp[0].nodo)); }
-#line 1433 "parser.tab.c"
+#line 1476 "src/parser.tab.c"
     break;
 
   case 35: /* expresion: expresion OP_RESTA expresion  */
-#line 214 "parser.y"
+#line 257 "src/parser.y"
                                                { (yyval.nodo) = nodo_op_binario("-",  (yyvsp[-2].nodo), (yyvsp[0].nodo)); }
-#line 1439 "parser.tab.c"
+#line 1482 "src/parser.tab.c"
     break;
 
   case 36: /* expresion: expresion OP_MULT expresion  */
-#line 215 "parser.y"
+#line 258 "src/parser.y"
                                                { (yyval.nodo) = nodo_op_binario("*",  (yyvsp[-2].nodo), (yyvsp[0].nodo)); }
-#line 1445 "parser.tab.c"
+#line 1488 "src/parser.tab.c"
     break;
 
   case 37: /* expresion: expresion OP_DIV expresion  */
-#line 216 "parser.y"
+#line 259 "src/parser.y"
                                                { (yyval.nodo) = nodo_op_binario("/",  (yyvsp[-2].nodo), (yyvsp[0].nodo)); }
-#line 1451 "parser.tab.c"
+#line 1494 "src/parser.tab.c"
     break;
 
   case 38: /* expresion: expresion OP_MOD expresion  */
-#line 217 "parser.y"
+#line 260 "src/parser.y"
                                                { (yyval.nodo) = nodo_op_binario("%",  (yyvsp[-2].nodo), (yyvsp[0].nodo)); }
-#line 1457 "parser.tab.c"
+#line 1500 "src/parser.tab.c"
     break;
 
   case 39: /* expresion: OP_RESTA expresion  */
-#line 218 "parser.y"
+#line 261 "src/parser.y"
                                                { (yyval.nodo) = nodo_op_unario("-",   (yyvsp[0].nodo));     }
-#line 1463 "parser.tab.c"
+#line 1506 "src/parser.tab.c"
     break;
 
   case 40: /* expresion: DELIM_PAR_IZQ expresion DELIM_PAR_DER  */
-#line 219 "parser.y"
+#line 262 "src/parser.y"
                                               { (yyval.nodo) = (yyvsp[-1].nodo); }
-#line 1469 "parser.tab.c"
+#line 1512 "src/parser.tab.c"
     break;
 
   case 41: /* expresion: LIT_ENTERO  */
-#line 220 "parser.y"
+#line 263 "src/parser.y"
                                                { (yyval.nodo) = nodo_entero((yyvsp[0].entero));    }
-#line 1475 "parser.tab.c"
+#line 1518 "src/parser.tab.c"
     break;
 
   case 42: /* expresion: LIT_DECIMAL  */
-#line 221 "parser.y"
+#line 264 "src/parser.y"
                                                { (yyval.nodo) = nodo_decimal((yyvsp[0].str));   }
-#line 1481 "parser.tab.c"
+#line 1524 "src/parser.tab.c"
     break;
 
   case 43: /* expresion: LIT_TEXT  */
-#line 222 "parser.y"
+#line 265 "src/parser.y"
                                                { (yyval.nodo) = nodo_texto((yyvsp[0].str));     }
-#line 1487 "parser.tab.c"
+#line 1530 "src/parser.tab.c"
     break;
 
   case 44: /* expresion: LIT_BOOLEANO  */
-#line 223 "parser.y"
+#line 266 "src/parser.y"
                                                { (yyval.nodo) = nodo_booleano((yyvsp[0].entero));  }
-#line 1493 "parser.tab.c"
+#line 1536 "src/parser.tab.c"
     break;
 
   case 45: /* expresion: IDENTIFICADOR  */
-#line 224 "parser.y"
+#line 267 "src/parser.y"
                                                { (yyval.nodo) = nodo_id((yyvsp[0].str));        }
-#line 1499 "parser.tab.c"
+#line 1542 "src/parser.tab.c"
     break;
 
 
-#line 1503 "parser.tab.c"
+#line 1546 "src/parser.tab.c"
 
       default: break;
     }
@@ -1692,36 +1735,88 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 227 "parser.y"
+#line 270 "src/parser.y"
 
 
 /* ----- FUNCIONES DE SOPORTE ------ */
 
 void yyerror(const char *s) {
+    if (modo_gui) {
+        /* En modo grafico se captura el error para emitirlo en @@ERRORES. */
+        hubo_error_sint  = 1;
+        linea_error_sint = yylineno;
+        snprintf(msg_error_sint, sizeof(msg_error_sint), "%s", s);
+        return;
+    }
     fprintf(stderr, "\n[ERROR SINTACTICO] Linea %d: %s\n\n", yylineno, s);
 }
 
-int main(int argc, char **argv) {
-    if (argc > 1) {
-        if (!ends_with_g5z80(argv[1])) {
-            fprintf(stderr, "\n[ERROR DE EXTENSION] El compilador solo acepta archivos con extension '.g5z80'.\n");
-            fprintf(stderr, "Ejemplo de uso: .\\compilador.exe ejemplo1.g5z80\n\n");
-            return 1;
-        }
+/* ── Flujo del compilador en modo grafico (--gui) ─────────────
+   Emite, en una sola pasada, las secciones que consume la GUI:
+     @@TOKENS / @@AST / @@SIMBOLOS / @@ERRORES / @@ESTADO / @@END
+   Las tres centrales las produce la regla 'programa'; aqui se anaden
+   los tokens (pre-pasada lexica) y el estado global de cada fase. */
+static int correr_gui(void) {
+    printf("@@TOKENS\n");
+    emitir_tokens_gui();          /* recorre el archivo y lo rebobina */
 
-        yyin = fopen(argv[1], "r");
-        if (!yyin) {
-            perror(argv[1]);
-            return 1;
-        }
-        printf("\n==================================================\n");
-        printf("Iniciando analisis de: %s\n", argv[1]);
-        printf("==================================================\n\n");
-    } else {
+    int ok = (yyparse() == 0);    /* la regla 'programa' emite @@AST.. si ok */
+
+    if (!ok) {
+        /* Con error sintactico la regla 'programa' no llega a ejecutarse:
+           se emiten las secciones vacias y el error capturado. */
+        printf("@@AST\n@@SIMBOLOS\n@@ERRORES\n");
+        if (hubo_error_sint)
+            printf("sintactico|%d|%s\n", linea_error_sint, msg_error_sint);
+        else
+            printf("sintactico|%d|error de sintaxis\n", yylineno);
+    }
+
+    printf("@@ESTADO\n");
+    printf("sintactico|%s\n", ok ? "ok" : "error");
+    if (!ok)                  printf("semantico|na\n");
+    else if (sem_con_errores) printf("semantico|error\n");
+    else                      printf("semantico|ok\n");
+    printf("@@END\n");
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    const char *ruta = NULL;
+
+    /* Procesa argumentos: bandera --gui y la ruta del archivo. */
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--gui") == 0) modo_gui = 1;
+        else                               ruta = argv[i];
+    }
+
+    if (!ruta) {
         printf("Por favor ingresa un archivo de texto con extension '.g5z80'.\n");
-        printf("Ejemplo: .\\compilador.exe ejemplo1.g5z80\n");
+        printf("Ejemplo: .\\compilador.exe ejemplo1.g5z80   (o --gui para la interfaz)\n");
         return 1;
     }
+    if (!ends_with_g5z80(ruta)) {
+        fprintf(stderr, "\n[ERROR DE EXTENSION] El compilador solo acepta archivos con extension '.g5z80'.\n");
+        fprintf(stderr, "Ejemplo de uso: .\\compilador.exe ejemplo1.g5z80\n\n");
+        return 1;
+    }
+
+    yyin = fopen(ruta, "r");
+    if (!yyin) {
+        perror(ruta);
+        return 1;
+    }
+
+    if (modo_gui) {
+        lexer_verbose = 0;        /* sin trazas del lexer en el flujo @@ */
+        int r = correr_gui();
+        fclose(yyin);
+        return r;
+    }
+
+    printf("\n==================================================\n");
+    printf("Iniciando analisis de: %s\n", ruta);
+    printf("==================================================\n\n");
 
     if (yyparse() == 0) {
         printf("\n==================================================\n");

@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
+#include "simbolos.h"
+#include "semantico.h"
+#include "gui_salida.h"
 
 extern int yylex();
 extern int yyparse();
@@ -14,6 +17,24 @@ extern FILE *yyin;
 extern int yylineno;
 
 void yyerror(const char *s);
+
+/* ── Modo de salida ──────────────────────────────────────────
+   modo_gui = 1  -> el compilador emite el formato delimitado (@@...)
+                    que consume la interfaz grafica (sin JSON en C).
+   modo_gui = 0  -> salida legible para consola (comportamiento normal). */
+int modo_gui = 0;
+
+/* lexer_verbose lo define el lexer (lex.yy.c). En modo --gui se apaga
+   para que el flujo solo contenga las secciones @@. */
+extern int lexer_verbose;
+
+/* Estado del error sintactico capturado (para el modo --gui). */
+static int  hubo_error_sint = 0;
+static int  linea_error_sint = 0;
+static char msg_error_sint[256] = "";
+
+/* Resultado del semantico capturado antes de liberar las estructuras. */
+static int sem_con_errores = 0;
 
 int ends_with_g5z80(const char *filename) {
     int len = strlen(filename);
@@ -81,14 +102,36 @@ programa:
         NodoAST *raiz = nuevo_nodo(NODO_PROGRAMA);
         raiz->izq = $3;
 
-        printf("\n==================================================\n");
-        printf("ARBOL DE SINTAXIS ABSTRACTA (AST)\n");
-        printf("==================================================\n\n");
-        imprimir_ast(raiz, 0);
-        printf("\n==================================================\n");
-        printf("FIN DEL AST\n");
-        printf("==================================================\n");
+        if (modo_gui) {
+            /* Salida delimitada para la interfaz grafica. */
+            printf("@@AST\n");
+            emitir_ast_gui(raiz);
 
+            analizar_semantico(raiz);
+            sem_con_errores = hay_errores_sem();
+
+            printf("@@SIMBOLOS\n");
+            emitir_simbolos_gui();
+            printf("@@ERRORES\n");
+            emitir_errores_gui();
+        } else {
+            /* Salida legible para consola. */
+            printf("\n==================================================\n");
+            printf("ARBOL DE SINTAXIS ABSTRACTA (AST)\n");
+            printf("==================================================\n\n");
+            imprimir_ast(raiz, 0);
+            printf("\n==================================================\n");
+            printf("FIN DEL AST\n");
+            printf("==================================================\n");
+
+            /* Analisis semantico: tabla de simbolos + verificacion de tipos */
+            analizar_semantico(raiz);
+            imprimir_tabla();
+            imprimir_errores_sem();
+        }
+
+        liberar_errores_sem();
+        liberar_tabla();
         liberar_ast(raiz);
     }
     ;
@@ -229,30 +272,82 @@ expresion:
 /* ----- FUNCIONES DE SOPORTE ------ */
 
 void yyerror(const char *s) {
+    if (modo_gui) {
+        /* En modo grafico se captura el error para emitirlo en @@ERRORES. */
+        hubo_error_sint  = 1;
+        linea_error_sint = yylineno;
+        snprintf(msg_error_sint, sizeof(msg_error_sint), "%s", s);
+        return;
+    }
     fprintf(stderr, "\n[ERROR SINTACTICO] Linea %d: %s\n\n", yylineno, s);
 }
 
-int main(int argc, char **argv) {
-    if (argc > 1) {
-        if (!ends_with_g5z80(argv[1])) {
-            fprintf(stderr, "\n[ERROR DE EXTENSION] El compilador solo acepta archivos con extension '.g5z80'.\n");
-            fprintf(stderr, "Ejemplo de uso: .\\compilador.exe ejemplo1.g5z80\n\n");
-            return 1;
-        }
+/* ── Flujo del compilador en modo grafico (--gui) ─────────────
+   Emite, en una sola pasada, las secciones que consume la GUI:
+     @@TOKENS / @@AST / @@SIMBOLOS / @@ERRORES / @@ESTADO / @@END
+   Las tres centrales las produce la regla 'programa'; aqui se anaden
+   los tokens (pre-pasada lexica) y el estado global de cada fase. */
+static int correr_gui(void) {
+    printf("@@TOKENS\n");
+    emitir_tokens_gui();          /* recorre el archivo y lo rebobina */
 
-        yyin = fopen(argv[1], "r");
-        if (!yyin) {
-            perror(argv[1]);
-            return 1;
-        }
-        printf("\n==================================================\n");
-        printf("Iniciando analisis de: %s\n", argv[1]);
-        printf("==================================================\n\n");
-    } else {
+    int ok = (yyparse() == 0);    /* la regla 'programa' emite @@AST.. si ok */
+
+    if (!ok) {
+        /* Con error sintactico la regla 'programa' no llega a ejecutarse:
+           se emiten las secciones vacias y el error capturado. */
+        printf("@@AST\n@@SIMBOLOS\n@@ERRORES\n");
+        if (hubo_error_sint)
+            printf("sintactico|%d|%s\n", linea_error_sint, msg_error_sint);
+        else
+            printf("sintactico|%d|error de sintaxis\n", yylineno);
+    }
+
+    printf("@@ESTADO\n");
+    printf("sintactico|%s\n", ok ? "ok" : "error");
+    if (!ok)                  printf("semantico|na\n");
+    else if (sem_con_errores) printf("semantico|error\n");
+    else                      printf("semantico|ok\n");
+    printf("@@END\n");
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    const char *ruta = NULL;
+
+    /* Procesa argumentos: bandera --gui y la ruta del archivo. */
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--gui") == 0) modo_gui = 1;
+        else                               ruta = argv[i];
+    }
+
+    if (!ruta) {
         printf("Por favor ingresa un archivo de texto con extension '.g5z80'.\n");
-        printf("Ejemplo: .\\compilador.exe ejemplo1.g5z80\n");
+        printf("Ejemplo: .\\compilador.exe ejemplo1.g5z80   (o --gui para la interfaz)\n");
         return 1;
     }
+    if (!ends_with_g5z80(ruta)) {
+        fprintf(stderr, "\n[ERROR DE EXTENSION] El compilador solo acepta archivos con extension '.g5z80'.\n");
+        fprintf(stderr, "Ejemplo de uso: .\\compilador.exe ejemplo1.g5z80\n\n");
+        return 1;
+    }
+
+    yyin = fopen(ruta, "r");
+    if (!yyin) {
+        perror(ruta);
+        return 1;
+    }
+
+    if (modo_gui) {
+        lexer_verbose = 0;        /* sin trazas del lexer en el flujo @@ */
+        int r = correr_gui();
+        fclose(yyin);
+        return r;
+    }
+
+    printf("\n==================================================\n");
+    printf("Iniciando analisis de: %s\n", ruta);
+    printf("==================================================\n\n");
 
     if (yyparse() == 0) {
         printf("\n==================================================\n");

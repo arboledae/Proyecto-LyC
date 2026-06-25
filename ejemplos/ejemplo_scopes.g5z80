@@ -1,0 +1,17 @@
+%% Ejemplo que ilustra el manejo de ambitos (scopes) anidados.
+   Cada bloque cuando/sino/loop abre un ambito propio, por eso las dos
+   variables 'y' (en bloques hermanos) no generan doble declaracion. %%
+inicio {
+  num x = 10;
+  cuando (x > 5) {
+    num y = 1;
+    imprimir(y);
+  } sino {
+    dec y = 2.5;
+    imprimir(y);
+  }
+  loop (x > 0) {
+    num z = 0;
+    x = x - 1;
+  }
+}

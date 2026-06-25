@@ -28,6 +28,7 @@ typedef struct NodoAST {
     TipoNodo tipo;
     char          *str_val;
     int            int_val;
+    int            linea;          /* linea de codigo fuente (para errores semanticos) */
     struct NodoAST *izq;
     struct NodoAST *der;
     struct NodoAST *extra;

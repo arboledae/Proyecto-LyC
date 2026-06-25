@@ -3,6 +3,10 @@
 #include <string.h>
 #include "ast.h"
 
+/* yylineno es definido por Flex (%option yylineno) y usado por Bison.
+   Solo se referencia cuando ast.c se enlaza con el compilador completo. */
+extern int yylineno;
+
 /* ── Constructores ──────────────────────────────────────────── */
 
 NodoAST* nuevo_nodo(TipoNodo tipo) {
@@ -10,6 +14,7 @@ NodoAST* nuevo_nodo(TipoNodo tipo) {
     n->tipo    = tipo;
     n->str_val = NULL;
     n->int_val = 0;
+    n->linea   = yylineno;     /* linea donde se construye el nodo */
     n->izq     = NULL;
     n->der     = NULL;
     n->extra   = NULL;
@@ -112,10 +117,24 @@ NodoAST* nodo_lista(NodoAST *sentencia, NodoAST *siguiente) {
 
 /* ── Impresión ──────────────────────────────────────────────── */
 
+static void sangria(int nivel) {
+    for (int i = 0; i < nivel; i++) printf("  ");
+}
+
 void imprimir_ast(NodoAST *nodo, int nivel) {
     if (!nodo) return;
 
-    for (int i = 0; i < nivel; i++) printf("  ");
+    /* El nodo lista es transparente: no imprime ni consume un nivel, asi
+       cada sentencia del bloque queda a la misma profundidad. El resto de
+       nodos imprime su sangria segun 'nivel' y sus hijos a nivel+1, de modo
+       que la profundidad crece de forma estrictamente monotona. */
+    if (nodo->tipo == NODO_LISTA_SENT) {
+        imprimir_ast(nodo->izq,   nivel);
+        imprimir_ast(nodo->extra, nivel);
+        return;
+    }
+
+    sangria(nivel);
 
     switch (nodo->tipo) {
         case NODO_PROGRAMA:
@@ -123,16 +142,14 @@ void imprimir_ast(NodoAST *nodo, int nivel) {
             imprimir_ast(nodo->izq, nivel + 1);
             break;
 
-        case NODO_LISTA_SENT:
-            imprimir_ast(nodo->izq,   nivel);
-            imprimir_ast(nodo->extra, nivel);
+        case NODO_LISTA_SENT:   /* tratado arriba */
             break;
 
         case NODO_DECLARACION:
             printf("[DECLARACION] tipo=%s  var=%s\n",
                    nodo->str_val, nodo->izq->str_val);
             if (nodo->der) {
-                for (int i = 0; i < nivel + 1; i++) printf("  ");
+                sangria(nivel + 1);
                 printf("[VALOR INICIAL]\n");
                 imprimir_ast(nodo->der, nivel + 2);
             }
@@ -145,14 +162,14 @@ void imprimir_ast(NodoAST *nodo, int nivel) {
 
         case NODO_CONDICIONAL:
             printf("[CUANDO]\n");
-            for (int i = 0; i < nivel + 1; i++) printf("  ");
+            sangria(nivel + 1);
             printf("[CONDICION]\n");
             imprimir_ast(nodo->izq, nivel + 2);
-            for (int i = 0; i < nivel + 1; i++) printf("  ");
+            sangria(nivel + 1);
             printf("[BLOQUE_SI]\n");
             imprimir_ast(nodo->der, nivel + 2);
             if (nodo->extra) {
-                for (int i = 0; i < nivel + 1; i++) printf("  ");
+                sangria(nivel + 1);
                 printf("[BLOQUE_SINO]\n");
                 imprimir_ast(nodo->extra, nivel + 2);
             }
@@ -160,10 +177,10 @@ void imprimir_ast(NodoAST *nodo, int nivel) {
 
         case NODO_CICLO:
             printf("[LOOP]\n");
-            for (int i = 0; i < nivel + 1; i++) printf("  ");
+            sangria(nivel + 1);
             printf("[CONDICION]\n");
             imprimir_ast(nodo->izq, nivel + 2);
-            for (int i = 0; i < nivel + 1; i++) printf("  ");
+            sangria(nivel + 1);
             printf("[CUERPO]\n");
             imprimir_ast(nodo->der, nivel + 2);
             break;

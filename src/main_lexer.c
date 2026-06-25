@@ -1,53 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "parser.tab.h"
+#include "tokens.h"
 
 extern int yylex();
 extern int yylineno;
 extern char* yytext;
 extern FILE* yyin;
 
-const char* obtener_nombre_token(int token) {
-    switch (token) {
-        case KW_INICIO:          return "KW_INICIO";
-        case KW_SINO:            return "KW_SINO";
-        case KW_CUANDO:          return "KW_CUANDO";
-        case KW_LOOP:            return "KW_LOOP";
-        case KW_IMPRIMIR:        return "KW_IMPRIMIR";
-        case KW_RETORNAR:        return "KW_RETORNAR";
-        case KW_NUM:             return "KW_NUM";
-        case KW_DEC:             return "KW_DEC";
-        case KW_TEXT:            return "KW_TEXT";
-        case LIT_BOOLEANO:       return "LIT_BOOLEANO";
-        case LIT_ENTERO:         return "LIT_ENTERO";
-        case LIT_DECIMAL:        return "LIT_DECIMAL";
-        case LIT_TEXT:           return "LIT_TEXT";
-        case IDENTIFICADOR:      return "IDENTIFICADOR";
-        case OP_ASIGNACION:      return "OP_ASIGNACION";
-        case OP_SUMA:            return "OP_SUMA";
-        case OP_RESTA:           return "OP_RESTA";
-        case OP_MULT:            return "OP_MULT";
-        case OP_DIV:             return "OP_DIV";
-        case OP_MOD:             return "OP_MOD";
-        case OP_IGUAL:           return "OP_IGUAL";
-        case OP_DIFERENTE:       return "OP_DIFERENTE";
-        case OP_MAYOR:           return "OP_MAYOR";
-        case OP_MENOR:           return "OP_MENOR";
-        case OP_MAYOR_IGUAL:     return "OP_MAYOR_IGUAL";
-        case OP_MENOR_IGUAL:     return "OP_MENOR_IGUAL";
-        case OP_AND:             return "OP_AND";
-        case OP_OR:              return "OP_OR";
-        case OP_NOT:             return "OP_NOT";
-        case DELIM_PUNTO_COMA:   return "DELIM_PUNTO_COMA";
-        case DELIM_PAR_IZQ:      return "DELIM_PAR_IZQ";
-        case DELIM_PAR_DER:      return "DELIM_PAR_DER";
-        case DELIM_LLAVE_IZQ:    return "DELIM_LLAVE_IZQ";
-        case DELIM_LLAVE_DER:    return "DELIM_LLAVE_DER";
-        default:                 return "TOKEN_DESCONOCIDO";
-    }
-}
+/* Bandera de traza del lexer (definida en lex.yy.c). Este driver imprime
+   los tokens por su cuenta, asi que apaga las trazas internas del lexer
+   para no duplicar la salida. */
+extern int lexer_verbose;
+
+/* yylval lo define normalmente Bison (parser.tab.c). Para compilar el
+   analizador lexico de forma independiente lo proveemos aqui. */
+YYSTYPE yylval;
 
 int main(int argc, char** argv) {
+    lexer_verbose = 0;
+
     if (argc > 1) {
         FILE* file = fopen(argv[1], "r");
         if (!file) {
@@ -63,7 +35,7 @@ int main(int argc, char** argv) {
     printf("--- INICIANDO ANALISIS LEXICO DEL ARCHIVO ---\n\n");
     while ((token = yylex()) != 0) {
         printf("[Linea %d] Token: %s (%d) | Lexema: \"%s\"\n",
-               yylineno, obtener_nombre_token(token), token, yytext);
+               yylineno, nombre_token(token), token, yytext);
     }
     printf("\n--- ANALISIS LEXICO FINALIZADO ---\n");
 

@@ -1,0 +1,12 @@
+inicio {
+  num x = 10;
+  x = "hola";
+  imprimir(z);
+  num x = 5;
+  cuando ("a" > 5) {
+    imprimir(x);
+  }
+  loop (x > 0) {
+    x = x + 1;
+  }
+}

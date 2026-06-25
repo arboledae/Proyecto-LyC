@@ -1,0 +1,75 @@
+name: Instalador de Windows
+
+# Se puede lanzar a mano desde la pestaña "Actions" (boton "Run workflow"),
+# o automaticamente al crear una etiqueta de version (ej. v1.0.0).
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write   # necesario para publicar el instalador en una Release
+
+env:
+  PYTHON_EMBED_VERSION: "3.12.7"   # version de Python embebido a empaquetar
+
+jobs:
+  construir-instalador:
+    runs-on: windows-latest
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      # gcc + flex + bison + make para compilar el compilador en C (64 bits).
+      - name: Preparar MSYS2 / MinGW
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            flex
+            bison
+            make
+
+      - name: Compilar compilador.exe (enlazado estatico)
+        shell: msys2 {0}
+        run: |
+          make clean
+          make     CFLAGS="-Wall -Isrc -static"
+          make lex CFLAGS="-Wall -Isrc -static"
+
+      - name: Descargar Python embebido (64 bits)
+        shell: pwsh
+        run: |
+          $ver = "${{ env.PYTHON_EMBED_VERSION }}"
+          $url = "https://www.python.org/ftp/python/$ver/python-$ver-embed-amd64.zip"
+          Write-Host "Descargando $url"
+          Invoke-WebRequest -Uri $url -OutFile python-embed.zip
+          Expand-Archive -Path python-embed.zip -DestinationPath installer/python -Force
+
+      - name: Instalar Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Generar el instalador
+        shell: pwsh
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\windows.iss
+
+      # Queda descargable desde la pagina de la ejecucion (pestaña Actions).
+      - name: Publicar como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: CompiladorLyC-Setup
+          path: installer/Output/CompiladorLyC-Setup.exe
+          if-no-files-found: error
+
+      # Ademas lo publica en una Release con enlace estable para compartir.
+      - name: Publicar en una Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'instalador-ultimo' }}
+          name: Instalador de Windows (ultima compilacion)
+          files: installer/Output/CompiladorLyC-Setup.exe
