@@ -5,8 +5,12 @@
 ;  Empaqueta:
 ;    - compilador.exe / analizador_lexico.exe  (compilados con MSYS2/MinGW)
 ;    - Python embebido                          (installer\python\)
-;    - La interfaz grafica web                  (gui\)
+;    - La interfaz grafica web                  (gui\, incluye el ensamblador
+;      z80asm.py y el generador de discos cpcdsk.py)
 ;    - Los ejemplos                             (ejemplos\)
+;    - WinAPE, emulador de Amstrad CPC          (tools\winape\), usado por el
+;      boton "Ejecutar en WinAPE" de la interfaz. Se descarga antes de
+;      compilar el instalador con tools\descargar_winape.ps1.
 ;
 ;  Al instalar crea un acceso directo "Compilador LyC". Al abrirlo arranca el
 ;  servidor local y se abre solo el navegador predeterminado con el programa.
@@ -49,11 +53,14 @@ Name: "desktopicon"; Description: "Crear un acceso directo en el escritorio"; Gr
 [Files]
 Source: "{#RootDir}\compilador.exe";         DestDir: "{app}"; Flags: ignoreversion
 Source: "{#RootDir}\analizador_lexico.exe";  DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
-Source: "{#RootDir}\gui\server.py";          DestDir: "{app}\gui"; Flags: ignoreversion
+Source: "{#RootDir}\gui\*.py";               DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "{#RootDir}\gui\static\*";           DestDir: "{app}\gui\static"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#RootDir}\ejemplos\*";             DestDir: "{app}\ejemplos"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Python embebido: descargar y descomprimir en installer\python\ antes de compilar.
 Source: "python\*";                          DestDir: "{app}\python"; Flags: ignoreversion recursesubdirs createallsubdirs
+; WinAPE (emulador Amstrad CPC): tools\descargar_winape.ps1 lo deja en
+; tools\winape\. El servidor lo busca en {app}\winape.
+Source: "{#RootDir}\tools\winape\*";         DestDir: "{app}\winape"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 
 [Icons]
 ; El acceso directo arranca el servidor con python.exe (ventana de consola que

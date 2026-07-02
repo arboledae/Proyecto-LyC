@@ -1,6 +1,14 @@
-# Analizador Léxico, Sintáctico, AST y Semántico en C (Flex & Bison) + Interfaz Gráfica
+# Compilador Dummy → Z80 (Amstrad CPC) — Grupo 5
 
-Este proyecto corresponde a la implementación de las fases de análisis léxico, análisis sintáctico, construcción del Árbol de Sintaxis Abstracta (AST) y **análisis semántico** para el lenguaje de programación Dummy (especificación del Grupo 5), diseñado utilizando **Flex** y **Bison (YACC)** en lenguaje C. Incluye además una **interfaz gráfica web** para visualizar los tres análisis.
+Compilador completo del lenguaje **Dummy** (especificación Grupo 5, UNMSM) que cubre las **cinco fases** de compilación:
+
+1. **Análisis léxico** (Flex)
+2. **Análisis sintáctico + AST** (Bison)
+3. **Análisis semántico** (tabla de símbolos, tipos, ámbitos)
+4. **Código intermedio** (cuádruplas / tres direcciones)
+5. **Generación de código Z80** (Amstrad CPC)
+
+Incluye una **interfaz gráfica web** que visualiza cada fase, un **ensamblador Z80** y un **generador de discos .dsk** (ambos en Python), y un botón para **ejecutar el programa en WinAPE** (emulador de Amstrad CPC).
 
 ---
 
@@ -9,101 +17,98 @@ Este proyecto corresponde a la implementación de las fases de análisis léxico
 ```text
 Proyecto-LyC/
 ├── src/
-│   ├── lexer.l                 # Reglas léxicas para Flex (trazas conmutables)
-│   ├── parser.y                # Gramática, acciones, main y modo --gui del compilador
-│   ├── ast.h / ast.c           # AST: nodos, impresión indentada y liberación
-│   ├── simbolos.h / simbolos.c # Tabla de símbolos con ámbitos únicos (semántico)
-│   ├── semantico.h / semantico.c # Verificación semántica + inferencia de tipos
-│   ├── gui_salida.h / gui_salida.c # Emisión delimitada @@TOKENS / @@AST para la GUI
-│   ├── tokens.h / tokens.c     # Mapeo código→nombre de token (compartido)
-│   └── main_lexer.c            # Driver independiente del analizador léxico
-├── gui/                        # Interfaz gráfica web (Python stdlib, sin dependencias)
-│   ├── server.py               # Servidor HTTP que invoca `compilador --gui` y traduce a JSON
-│   └── static/ (index.html, style.css, app.js)
+│   ├── lexer.l                    # Reglas léxicas para Flex
+│   ├── parser.y                   # Gramática Bison, acciones, main y modo --gui
+│   ├── ast.h / ast.c              # AST: nodos, impresión indentada y liberación
+│   ├── simbolos.h / simbolos.c    # Tabla de símbolos con ámbitos (scopes)
+│   ├── semantico.h / semantico.c  # Verificación semántica + inferencia de tipos
+│   ├── codigo_intermedio.h / .c   # Código intermedio: cuádruplas (TAC)
+│   ├── generador_z80.h / .c       # Generación de ensamblador Z80 para Amstrad CPC
+│   ├── gui_salida.h / gui_salida.c# Emisión delimitada @@TOKENS/@@AST/... para la GUI
+│   ├── tokens.h / tokens.c        # Mapeo código→nombre de token (compartido)
+│   └── main_lexer.c               # Driver independiente del analizador léxico
+├── gui/                           # Interfaz gráfica web (Python stdlib, sin dependencias)
+│   ├── server.py                  # Servidor HTTP: invoca `compilador --gui`, traduce a JSON
+│   ├── z80asm.py                  # Mini-ensamblador Z80 (dos pasadas)
+│   ├── cpcdsk.py                  # Generador de imágenes de disco .dsk (Amstrad CPC)
+│   └── static/
+│       ├── index.html             # Página principal de la interfaz
+│       ├── style.css              # Estilos de la interfaz
+│       └── app.js                 # Lógica del frontend (pestañas, renders, WinAPE)
 ├── ejemplos/
-│   ├── ejemplo1.g5z80          # Programa válido
-│   ├── ejemplo_scopes.g5z80    # Ámbitos (scopes) anidados
-│   ├── ejemplo_con_error.g5z80 # Error sintáctico intencional
-│   └── ejemplo_semantico_error.g5z80 # Errores semánticos
-├── Makefile                    # Automatiza bison/flex/gcc y lanza la GUI
+│   ├── ejemplo1.g5z80             # Programa válido
+│   ├── ejemplo_scopes.g5z80       # Ámbitos (scopes) anidados
+│   ├── ejemplo_con_error.g5z80    # Error sintáctico intencional
+│   └── ejemplo_semantico_error.g5z80  # Errores semánticos
+├── installer/                     # Instalador de Windows (Inno Setup)
+│   ├── windows.iss                # Receta de Inno Setup
+│   ├── construir.bat              # Automatiza la generación del instalador
+│   └── BUILD.md                   # Instrucciones paso a paso
+├── tools/
+│   └── descargar_winape.ps1       # Descarga WinAPE (emulador Amstrad CPC)
+├── .github/workflows/
+│   └── windows-installer.yml      # CI: compila y genera el instalador automáticamente
+├── Makefile                       # Automatiza bison/flex/gcc y lanza la GUI
 └── README.md
 ```
-
-### Descripción de los Archivos Principales:
-- **`src/lexer.l`**: Expresiones regulares para identificar tokens del lenguaje Dummy.
-- **`src/parser.y`**: Gramática Libre de Contexto (GLC) del lenguaje. Contiene las acciones semánticas que construyen el AST y la función `yyerror` para el reporte de errores sintácticos.
-- **`src/ast.h`**: Declaración del enum `TipoNodo`, la estructura `NodoAST` y los prototipos de todos los constructores.
-- **`src/ast.c`**: Implementación de los constructores de nodos, la función `imprimir_ast` (impresión con indentación) y `liberar_ast` (liberación de memoria).
-- **`src/main_lexer.c`**: Programa independiente que consume tokens uno por uno e imprime cada token con su número de línea y lexema. Sirve para probar el lexer sin pasar por el análisis sintáctico.
 
 ---
 
 ## 🛠️ Prerrequisitos
 
-### En Linux (Debian/Ubuntu):
+### En Linux (Debian/Ubuntu)
 ```bash
 sudo apt-get update
-sudo apt-get install flex bison build-essential
+sudo apt-get install flex bison build-essential python3
 ```
 
-### En Windows:
-- **Compilación Nativa**: Usa **MinGW-w64** o **MSYS2** para obtener `gcc` en Windows.
-- **Compilación Cruzada (desde Linux)**: Instala el compilador cruzado:
-    ```bash
-    sudo apt-get install gcc-mingw-w64-x86-64
-    ```
+### En Windows
+- **MSYS2** con MinGW-w64 para obtener `gcc`, `flex`, `bison` y `make`.
+- **Python 3** (para la interfaz gráfica web).
+- Alternativamente, usa directamente el **instalador** (`CompiladorLyC-Setup.exe`) que empaqueta todo sin necesidad de instalar nada.
 
 ---
 
-## 🚀 Fase 1: Generación de archivos intermedios (Bison & Flex)
+## 🚀 Compilación
 
-Ejecuta estos comandos desde la raíz del proyecto:
+### Con Make (recomendado)
 
+```bash
+make            # Compila el compilador completo (5 fases)
+make lex        # Compila solo el analizador léxico independiente
+make clean      # Limpia archivos generados
+```
+
+### Manual
+
+**1. Generar archivos intermedios (Bison & Flex):**
 ```bash
 bison -d src/parser.y -o src/parser.tab.c
 flex -o src/lex.yy.c src/lexer.l
 ```
 
-Esto genera `src/parser.tab.c`, `src/parser.tab.h` y `src/lex.yy.c`.
+**2. Compilar el compilador completo (5 fases):**
+```bash
+gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c src/ast.c \
+    src/simbolos.c src/semantico.c src/codigo_intermedio.c \
+    src/generador_z80.c src/gui_salida.c src/tokens.c -o compilador
+```
+
+**3. Compilar solo el analizador léxico:**
+```bash
+gcc -Wall -Isrc src/main_lexer.c src/lex.yy.c src/tokens.c -o analizador_lexico
+```
+
+> En Windows, agrega `.exe` al nombre del binario y usa `-static` para evitar dependencias de DLL:
+> ```bash
+> make CFLAGS="-Wall -Isrc -static"
+> ```
 
 ---
 
-## 💻 Instrucciones de Compilación
+## 🔍 Uso y Verificación
 
-### 1. Compilar el Compilador Completo (Léxico + Sintáctico + AST)
-
-**Linux:**
-```bash
-gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c src/ast.c -o compilador
-```
-
-**Windows (nativo):**
-```cmd
-gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c src/ast.c -o compilador.exe
-```
-
-**Windows (compilación cruzada desde Linux):**
-```bash
-x86_64-w64-mingw32-gcc -Wall -Isrc src/parser.tab.c src/lex.yy.c src/ast.c -o compilador.exe
-```
-
-### 2. Compilar solo el Analizador Léxico
-
-**Linux:**
-```bash
-gcc -Wall -Isrc src/main_lexer.c src/lex.yy.c -o analizador_lexico
-```
-
-**Windows:**
-```cmd
-gcc -Wall -Isrc src/main_lexer.c src/lex.yy.c -o analizador_lexico.exe
-```
-
----
-
-## 🔍 Verificación del Funcionamiento
-
-### 1. Analizador Léxico independiente
+### 1. Analizador léxico independiente
 
 ```bash
 ./analizador_lexico ejemplos/ejemplo1.g5z80
@@ -116,144 +121,26 @@ gcc -Wall -Isrc src/main_lexer.c src/lex.yy.c -o analizador_lexico.exe
 [Linea 1] Token: KW_INICIO (258) | Lexema: "inicio"
 [Linea 1] Token: DELIM_LLAVE_IZQ (292) | Lexema: "{"
 [Linea 2] Token: KW_NUM (264) | Lexema: "num"
-[Linea 2] Token: IDENTIFICADOR (261) | Lexema: "x"
-[Linea 2] Token: OP_ASIGNACION (270) | Lexema: "="
-[Linea 2] Token: LIT_ENTERO (267) | Lexema: "10"
 ...
 
 --- ANALISIS LEXICO FINALIZADO ---
 ```
 
-### 2. Compilador completo (Léxico + Sintáctico + AST)
-
-#### Prueba A: Código válido
+### 2. Compilador completo (consola)
 
 ```bash
 ./compilador ejemplos/ejemplo1.g5z80
 ```
 
-**Salida esperada:**
-```text
-==================================================
-Iniciando analisis de: ejemplos/ejemplo1.g5z80
-==================================================
+Muestra las 5 fases en secuencia: tokens → AST → tabla de símbolos → cuádruplas TAC → código Z80.
 
-[Lexico] Linea 1: Palabra clave 'inicio'
-...
-
-==================================================
-ARBOL DE SINTAXIS ABSTRACTA (AST)
-==================================================
-
-[PROGRAMA]
-    [DECLARACION] tipo=num  var=x
-    [VALOR INICIAL]
-      [LIT_ENTERO] 10
-    [CUANDO]
-    [CONDICION]
-      [OP_BIN] >
-        [ID] x
-        [LIT_ENTERO] 5
-    [BLOQUE_SI]
-        [IMPRIMIR]
-          [LIT_TEXT] "Mayor que 5"
-    ...
-
-==================================================
-FIN DEL AST
-==================================================
-
-==================================================
-ANALISIS SINTACTICO Y AST COMPLETADOS EXITOSAMENTE
-==================================================
-```
-
-#### Prueba B: Código con error sintáctico
+### 3. Modo GUI (formato delimitado)
 
 ```bash
-./compilador ejemplos/ejemplo_con_error.g5z80
+./compilador --gui ejemplos/ejemplo1.g5z80
 ```
 
-**Salida esperada:**
-```text
-[ERROR SINTACTICO] Linea 3: syntax error
-
-==================================================
-ANALISIS CONCLUIDO CON ERRORES SINTACTICOS
-==================================================
-```
-
----
-
-## 🧹 Limpieza de Archivos Generados
-
-**Linux:**
-```bash
-rm -f src/lex.yy.c src/parser.tab.c src/parser.tab.h compilador analizador_lexico
-```
-
-**Windows:**
-```cmd
-del src\lex.yy.c src\parser.tab.c src\parser.tab.h compilador.exe analizador_lexico.exe
-```
-
-o simplemente:
-```bash
-make clean
-```
-
----
-
-## 🧩 Análisis Semántico (Semana 11–12)
-
-Tras construir el AST, el compilador realiza el análisis semántico:
-
-1. **Tabla de símbolos** con manejo de ámbitos (scopes): el bloque `inicio { }` es el scope global (0); los cuerpos de `cuando`/`sino`/`loop` abren un nuevo ámbito.
-2. **Inferencia de tipos** por nodo de expresión (`num`, `dec`, `text`, `booleano`).
-3. **Verificaciones:** variable no declarada, doble declaración en el mismo ámbito, tipos incompatibles en asignación/declaración, operaciones inválidas entre tipos (`text + num`, `text > num`, `&&` con no-booleanos) y condición de `cuando`/`loop` debe ser booleana.
-
-```bash
-./compilador ejemplos/ejemplo_semantico_error.g5z80
-```
-
-**Salida (resumen):**
-```
-[ERROR SEMANTICO] Linea 3: Tipo incompatible: no se puede asignar 'text' a 'num' (variable 'x').
-[ERROR SEMANTICO] Linea 4: Variable 'z' no declarada.
-[ERROR SEMANTICO] Linea 5: Doble declaracion de la variable 'x' en el mismo ambito.
-```
-
----
-
-## 🖥️ Interfaz Gráfica (entregable final)
-
-Interfaz web para **verificar los tres niveles de análisis** (léxico, sintáctico y semántico) de forma gráfica. **No requiere instalar nada** (usa el servidor HTTP estándar de Python, sin Flask ni dependencias).
-
-### Requisitos
-- Tener compilado el proyecto: `make`.
-- Python 3 (ya incluido en la mayoría de sistemas).
-
-### Ejecutar
-```bash
-make gui
-```
-Luego abre **http://localhost:5000** en el navegador.
-
-### Uso
-1. Escribe código o elige uno del desplegable **Cargar ejemplo**.
-2. Pulsa **Léxico**, **Sintáctico**, **Semántico** o **⚡ Analizar Todo**.
-3. En el panel derecho, navega entre las pestañas:
-   - **Léxico:** tabla de tokens con colores por categoría y conteos por tipo.
-   - **Sintáctico:** árbol AST dibujado como árbol visual anidado y colapsable.
-   - **Semántico:** tabla de símbolos coloreada por ámbito + diagnósticos (léxicos, sintácticos y semánticos) con su línea.
-4. La **barra de pipeline** del encabezado (① Léxico → ② Sintáctico → ③ Semántico) resume el estado de cada fase.
-
-> La vista activa y el ejemplo inicial se pueden enlazar: `…/?archivo=ejemplo_scopes.g5z80#semantico`.
-
-### Modo `--gui` del compilador (formato delimitado, sin JSON en C)
-
-El servidor invoca el compilador con `--gui`, que emite en **una sola pasada** un flujo de
-texto delimitado por `|` (trivial de parsear en Python, evita escribir un serializador JSON en C):
+Emite un flujo de texto delimitado por secciones `@@`:
 
 ```text
 @@TOKENS
@@ -264,15 +151,146 @@ texto delimitado por `|` (trivial de parsear en Python, evita escribir un serial
 <nombre>|<tipo>|<scope>|<linea>|<si|no>
 @@ERRORES
 <lexico|sintactico|semantico>|<linea>|<mensaje>
+@@INTERMEDIO
+<n>|<op>|<arg1>|<arg2>|<res>|<texto>
+@@Z80
+<líneas de ensamblador Z80>
 @@ESTADO
 sintactico|<ok|error>
 semantico|<ok|error|na>
+intermedio|<ok|na>
+z80|<ok|na>
 @@END
 ```
 
-La profundidad de cada nodo del AST se emite de forma explícita, por lo que el frontend
-reconstruye el árbol sin ambigüedad. Se puede inspeccionar directamente:
+---
+
+## 🧩 Fases del Compilador
+
+### Fase 1 – Análisis Léxico
+Expresiones regulares (Flex) que identifican tokens del lenguaje Dummy: palabras clave, literales, operadores, delimitadores e identificadores.
+
+### Fase 2 – Análisis Sintáctico + AST
+Gramática Libre de Contexto (Bison) que construye el Árbol de Sintaxis Abstracta con nodos tipados para declaraciones, asignaciones, expresiones, `cuando`/`sino`, `loop`, `imprimir`, etc.
+
+### Fase 3 – Análisis Semántico
+- **Tabla de símbolos** con manejo de ámbitos (scopes): `inicio {}` es el scope global (0); los cuerpos de `cuando`/`sino`/`loop` abren un nuevo ámbito.
+- **Inferencia de tipos** por nodo de expresión (`num`, `dec`, `text`, `booleano`).
+- **Verificaciones:** variable no declarada, doble declaración, tipos incompatibles, operaciones inválidas entre tipos, condición de `cuando`/`loop` debe ser booleana.
 
 ```bash
-./compilador --gui ejemplos/ejemplo1.g5z80
+./compilador ejemplos/ejemplo_semantico_error.g5z80
 ```
+
+```text
+[ERROR SEMANTICO] Linea 3: Tipo incompatible: no se puede asignar 'text' a 'num' (variable 'x').
+[ERROR SEMANTICO] Linea 4: Variable 'z' no declarada.
+[ERROR SEMANTICO] Linea 5: Doble declaracion de la variable 'x' en el mismo ambito.
+```
+
+### Fase 4 – Código Intermedio (TAC)
+Linealiza el AST en cuádruplas de tres direcciones (`op`, `arg1`, `arg2`, `res`) con temporales `t1..tn` y etiquetas `L1..Ln`. Operaciones: aritméticas, relacionales, lógicas, asignación, saltos condicionales e incondicionales, `imprimir`, `fin`.
+
+### Fase 5 – Generación de Código Z80 (Amstrad CPC)
+Traduce las cuádruplas TAC a ensamblador Z80 para el Amstrad CPC:
+- Variables y temporales: palabras de 16 bits con signo.
+- `imprimir` de texto usa el firmware del CPC (`&BB5A`).
+- El programa pinta un cuadro de bits escribiendo en la memoria de video (`&C000`) y queda en un bucle infinito.
+- `org &4000`: se carga y ejecuta con `RUN"MAIN` en el emulador.
+
+---
+
+## 🖥️ Interfaz Gráfica Web
+
+Interfaz web para **verificar las cinco fases** de forma gráfica. **No requiere dependencias** (usa el servidor HTTP estándar de Python).
+
+### Ejecutar
+```bash
+make gui
+```
+Abre automáticamente **http://localhost:5000** en el navegador.
+
+### Uso
+1. Escribe código o elige uno del desplegable **Cargar ejemplo**.
+2. Pulsa **Léxico**, **Sintáctico**, **Semántico**, **Intermedio** o **⚡ Analizar Todo**.
+3. En el panel derecho, navega entre las pestañas:
+   - **Léxico:** tabla de tokens con colores por categoría y conteos.
+   - **Sintáctico:** árbol AST visual anidado y colapsable.
+   - **Semántico:** tabla de símbolos coloreada por ámbito + diagnósticos.
+   - **Intermedio:** tabla de cuádruplas TAC con resaltado por tipo de operación.
+   - **Z80:** listado de ensamblador con resaltado de sintaxis, botón para ejecutar en WinAPE y descargar `.dsk`.
+4. La **barra de pipeline** (① Léxico → ② Sintáctico → ③ Semántico → ④ Intermedio → ⑤ Z80) resume el estado de cada fase.
+5. El botón **🕹️ Ejecutar en WinAPE** compila, ensambla (z80asm.py), empaqueta en un disco (cpcdsk.py) y abre el emulador.
+
+> La vista activa y el ejemplo se pueden enlazar: `…/?archivo=ejemplo_scopes.g5z80#intermedio`.
+
+---
+
+## 🕹️ Ejecución en WinAPE (Emulador Amstrad CPC)
+
+El compilador genera código Z80 que se puede ejecutar en un Amstrad CPC real o emulado.
+
+### Pipeline de ejecución
+```
+Código Dummy → compilador (5 fases) → Z80 ASM → z80asm.py → binario → cpcdsk.py → .dsk → WinAPE
+```
+
+### Herramientas Python
+- **`gui/z80asm.py`** — Mini-ensamblador Z80 de dos pasadas. Cubre el subconjunto de instrucciones que emite el generador.
+- **`gui/cpcdsk.py`** — Genera imágenes de disco `.dsk` en formato CPCEMU estándar (40 pistas, 9 sectores, cabecera AMSDOS).
+
+### Instalar WinAPE
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\descargar_winape.ps1
+```
+
+O descárgalo manualmente de [winape.net](http://www.winape.net) y descomprímelo en `tools\winape\`.
+
+---
+
+## 📦 Instalador de Windows
+
+Se genera un **instalador** (`CompiladorLyC-Setup.exe`) que empaqueta todo lo necesario para que los usuarios solo ejecuten el `Setup.exe`:
+
+- `compilador.exe` y `analizador_lexico.exe` (enlazados estáticamente)
+- Python embebido (sin necesidad de instalar Python)
+- Interfaz gráfica web (GUI)
+- Ensamblador Z80 y generador de discos
+- Ejemplos
+- WinAPE (emulador)
+
+Al instalar, crea un acceso directo **"Compilador LyC"** que al abrirlo arranca el servidor y abre el navegador automáticamente.
+
+### Generar el instalador localmente
+Ver instrucciones detalladas en [`installer/BUILD.md`](installer/BUILD.md).
+
+Resumen rápido:
+1. Compila con MSYS2: `make CFLAGS="-Wall -Isrc -static"`
+2. Coloca Python embebido en `installer\python\`
+3. Ejecuta `installer\construir.bat`
+4. El instalador queda en `installer\Output\CompiladorLyC-Setup.exe`
+
+### Generar con GitHub Actions (CI)
+El workflow `.github/workflows/windows-installer.yml` automatiza todo el proceso:
+- Se lanza **manualmente** desde la pestaña Actions (botón "Run workflow").
+- O **automáticamente** al crear un tag de versión (`git tag v1.0.0 && git push --tags`).
+- El instalador queda disponible como **artefacto descargable** en la ejecución y como **Release** del repositorio.
+
+---
+
+## 🧹 Limpieza
+
+```bash
+make clean
+```
+
+O manualmente:
+```bash
+rm -f src/lex.yy.c src/parser.tab.c src/parser.tab.h compilador analizador_lexico
+```
+
+---
+
+## 👥 Créditos
+
+Universidad Nacional Mayor de San Marcos · Lenguajes y Compiladores · **Grupo 5**

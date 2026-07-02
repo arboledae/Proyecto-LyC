@@ -128,4 +128,28 @@ td.vacio { color:var(--muted); text-align:center; padding:14px; }
 
 footer { text-align:center; padding:14px; color: var(--muted); font-size:.78rem; border-top:1px solid #334155; }
 
+/* ── Botón Ejecutar en WinAPE ── */
+.botones .ejecutar { background: linear-gradient(135deg,#166534,#15803d); color:#dcfce7; border:1px solid #22c55e; }
+.botones .ejecutar:hover { background: linear-gradient(135deg,#15803d,#16a34a); }
+.mini-ejecutar { border-color:#22c55e !important; color:var(--ok) !important; }
+
+/* ── Código intermedio (cuádruplas) ── */
+#tabla-intermedio td { font-family:'Consolas','Courier New',monospace; }
+.fila-label { background:#182236; }
+.tacop { padding:1px 8px; border-radius:8px; font-size:.76rem; font-weight:600; font-family:'Segoe UI',sans-serif; }
+.tacop-arit  { background:#3d2410; color:var(--op); }
+.tacop-copia { background:#102447; color:var(--delim); }
+.tacop-salto { background:#3b1d5e; color:var(--kw); }
+.tacop-io    { background:#13331f; color:var(--lit); }
+
+/* ── Listado Z80 ── */
+.asm { background:#0b1220; border:1px solid #334155; border-radius:8px; padding:12px;
+  font-family:'Consolas','Courier New',monospace; font-size:.84rem; line-height:1.45;
+  overflow:auto; white-space:pre; color:#cbd5e1; }
+.asm .cmt { color:#5b7a5b; }
+.asm .lbl { color:var(--accent); font-weight:700; }
+.asm .mn  { color:var(--kw); }
+#vista-z80 .barra { align-items:flex-start; }
+#vista-z80 h2 { margin:8px 0 10px; }
+
 @media (max-width: 900px) { main { grid-template-columns: 1fr; } .pipeline { width:100%; justify-content:center; } }

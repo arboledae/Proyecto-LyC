@@ -16,3 +16,8 @@ __pycache__/
 # Artefactos del build del instalador de Windows
 installer/python/
 installer/Output/
+
+# Herramientas locales descargadas (toolchain portable, WinAPE, Python)
+# Solo se versiona el script que las descarga.
+tools/*
+!tools/descargar_winape.ps1

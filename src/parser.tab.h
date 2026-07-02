@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_SRC_PARSER_TAB_H_INCLUDED
-# define YY_YY_SRC_PARSER_TAB_H_INCLUDED
+#ifndef YY_YY_C_USERS_STEVEEN_DOCUMENTS_PROYECTOS_PROYECTO_LYC_SRC_PARSER_TAB_H_INCLUDED
+# define YY_YY_C_USERS_STEVEEN_DOCUMENTS_PROYECTOS_PROYECTO_LYC_SRC_PARSER_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -45,11 +45,11 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 1 "src/parser.y"
+#line 1 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
 
     #include "ast.h"
 
-#line 53 "src/parser.tab.h"
+#line 53 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -105,13 +105,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 53 "src/parser.y"
+#line 55 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
 
     int            entero;
     char          *str;
     struct NodoAST *nodo;
 
-#line 115 "src/parser.tab.h"
+#line 115 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -126,4 +126,4 @@ extern YYSTYPE yylval;
 int yyparse (void);
 
 
-#endif /* !YY_YY_SRC_PARSER_TAB_H_INCLUDED  */
+#endif /* !YY_YY_C_USERS_STEVEEN_DOCUMENTS_PROYECTOS_PROYECTO_LYC_SRC_PARSER_TAB_H_INCLUDED  */

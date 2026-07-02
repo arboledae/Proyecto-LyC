@@ -20,14 +20,25 @@ Ejecutar desde la raiz del proyecto:
     make gui        # lanza este servidor
     # abrir http://localhost:5000
 """
+import glob
 import http.server
 import json
 import os
 import socket
 import subprocess
+import sys
 import tempfile
 import threading
+import time
 import webbrowser
+
+# El Python embebido del instalador no agrega la carpeta del script a
+# sys.path (usa python._pth), asi que se agrega a mano para poder
+# importar z80asm y cpcdsk.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import z80asm     # mini-ensamblador Z80        (gui/z80asm.py)
+import cpcdsk     # generador de imagenes .dsk  (gui/cpcdsk.py)
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 COMPILADOR   = os.path.join(PROJECT_ROOT, "compilador")
@@ -66,7 +77,8 @@ def ejecutar_compilador(ruta_archivo, timeout=10):
     try:
         proc = subprocess.run(
             [COMPILADOR, "--gui", ruta_archivo], cwd=PROJECT_ROOT,
-            capture_output=True, text=True, timeout=timeout)
+            capture_output=True, text=True, timeout=timeout,
+            encoding="utf-8", errors="replace")
         return (proc.stdout or "") + (proc.stderr or ""), None
     except FileNotFoundError:
         return "", "No se encontro el binario 'compilador'. Ejecuta 'make' primero."
@@ -87,14 +99,16 @@ def parsear_salida_gui(salida):
     """Convierte el flujo delimitado @@... del compilador en un dict JSON."""
     seccion = None
     tokens, ast, simbolos, errores = [], [], [], []
+    intermedio, z80 = [], []
     sintactico_ok, semantico_estado = False, "na"
+    intermedio_estado, z80_estado = "na", "na"
 
     for raw in salida.splitlines():
         ln = raw.rstrip()
         if ln.startswith("@@"):
             seccion = ln[2:].strip()
             continue
-        if not ln:
+        if not ln and seccion != "Z80":
             continue
 
         if seccion == "TOKENS":
@@ -118,23 +132,135 @@ def parsear_salida_gui(salida):
             if len(p) == 3:
                 errores.append({"tipo": p[0], "linea": _int(p[1]), "mensaje": p[2]})
 
+        elif seccion == "INTERMEDIO":
+            # n|op|arg1|arg2|res|texto  (texto = version legible)
+            p = ln.split("|", 5)
+            if len(p) == 6:
+                intermedio.append({"n": _int(p[0]), "op": p[1], "arg1": p[2],
+                                   "arg2": p[3], "res": p[4], "texto": p[5]})
+
+        elif seccion == "Z80":
+            z80.append(raw.rstrip("\r"))
+
         elif seccion == "ESTADO":
             p = ln.split("|", 1)
             if len(p) == 2 and p[0] == "sintactico":
                 sintactico_ok = (p[1] == "ok")
             elif len(p) == 2 and p[0] == "semantico":
                 semantico_estado = p[1]
+            elif len(p) == 2 and p[0] == "intermedio":
+                intermedio_estado = p[1]
+            elif len(p) == 2 and p[0] == "z80":
+                z80_estado = p[1]
+
+    # quitar lineas vacias del final del listado Z80
+    while z80 and not z80[-1].strip():
+        z80.pop()
 
     return {
         "tokens": tokens,
         "ast": ast,
         "simbolos": simbolos,
         "errores": errores,
+        "intermedio": intermedio,
+        "z80": z80,
         "sintactico_ok": sintactico_ok,
         "semantico_ok": semantico_estado == "ok",
-        "semantico_estado": semantico_estado,   # ok | error | na
+        "semantico_estado": semantico_estado,     # ok | error | na
+        "intermedio_estado": intermedio_estado,   # ok | na
+        "z80_estado": z80_estado,                 # ok | na
+        "winape_disponible": buscar_winape() is not None,
         "salida_cruda": salida,
     }
+
+
+# ── Ejecucion en WinAPE (emulador de Amstrad CPC) ────────────────
+# El codigo Z80 del compilador se ensambla (z80asm), se empaqueta en
+# una imagen de disco (cpcdsk) y se abre WinAPE con autoarranque:
+#     WinApe.exe <imagen.dsk> /A:MAIN
+proceso_winape = None     # ultima instancia lanzada por este servidor
+
+
+def buscar_winape():
+    """Devuelve la ruta de WinApe.exe o None si no esta instalado."""
+    candidatos = []
+    env = os.environ.get("WINAPE")
+    if env:
+        candidatos += [env, os.path.join(env, "WinApe.exe")]
+    for base in (os.path.join(PROJECT_ROOT, "tools", "winape"),
+                 os.path.join(PROJECT_ROOT, "winape")):
+        candidatos += [os.path.join(base, "WinApe.exe"),
+                       os.path.join(base, "WinAPE.exe")]
+    for c in candidatos:
+        if c and os.path.isfile(c):
+            return c
+    return None
+
+
+def compilar_a_dsk(codigo):
+    """Compila codigo Dummy hasta una imagen .dsk.
+    Devuelve (dsk_bytes, resultado_analisis, mensaje_error)."""
+    fd, tmppath = tempfile.mkstemp(suffix=".g5z80")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(codigo)
+        salida, error = ejecutar_compilador(tmppath)
+    finally:
+        try:
+            os.remove(tmppath)
+        except OSError:
+            pass
+    if error:
+        return None, None, error
+
+    res = parsear_salida_gui(salida)
+    if not res["sintactico_ok"] or res["semantico_estado"] != "ok":
+        return None, res, ("El programa tiene errores (revisa los "
+                           "diagnosticos): no se genero codigo Z80.")
+    if not res["z80"]:
+        return None, res, "El compilador no emitio codigo Z80."
+
+    try:
+        binario, org = z80asm.ensamblar("\n".join(res["z80"]))
+    except z80asm.ErrorAsm as e:
+        return None, res, "Error al ensamblar el Z80: %s" % e
+    dsk = cpcdsk.crear_dsk(binario, nombre="MAIN", ext="BIN",
+                           carga=org, ejecucion=org)
+    return dsk, res, None
+
+
+def lanzar_winape(dsk_bytes):
+    """Escribe la imagen .dsk y abre WinAPE con autoarranque RUN"MAIN."""
+    global proceso_winape
+
+    ruta_winape = buscar_winape()
+    if not ruta_winape:
+        return (None, "No se encontro WinApe.exe. Ejecuta "
+                      "tools\\descargar_winape.ps1 (o define la variable "
+                      "de entorno WINAPE con la ruta del emulador).")
+
+    # una imagen nueva por ejecucion (WinAPE mantiene abierta la anterior)
+    carpeta = tempfile.gettempdir()
+    for viejo in glob.glob(os.path.join(carpeta, "dummy_g5_*.dsk")):
+        try:
+            os.remove(viejo)
+        except OSError:
+            pass                      # en uso por otra instancia
+    ruta_dsk = os.path.join(carpeta, "dummy_g5_%d.dsk" % int(time.time() * 1000))
+    with open(ruta_dsk, "wb") as f:
+        f.write(dsk_bytes)
+
+    # cerrar la instancia anterior lanzada por este servidor
+    if proceso_winape and proceso_winape.poll() is None:
+        try:
+            proceso_winape.terminate()
+        except OSError:
+            pass
+
+    proceso_winape = subprocess.Popen(
+        [ruta_winape, ruta_dsk, "/A:MAIN"],
+        cwd=os.path.dirname(ruta_winape))
+    return ruta_dsk, None
 
 
 def leer_ejemplo(archivo):
@@ -198,33 +324,73 @@ class Handler(http.server.BaseHTTPRequestHandler):
         else:
             self._send(404, "No encontrado", "text/plain")
 
-    def do_POST(self):
-        if self.path != "/analizar":
-            self._send(404, "No encontrado", "text/plain")
-            return
-
+    def _leer_codigo(self):
+        """Lee el JSON {codigo: ...} del cuerpo de la peticion."""
         length = int(self.headers.get("Content-Length", 0))
+        payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        return payload.get("codigo", "")
+
+    def do_POST(self):
         try:
-            payload = json.loads(self.rfile.read(length).decode("utf-8"))
-            codigo = payload.get("codigo", "")
+            codigo = self._leer_codigo()
         except Exception as e:                   # noqa: BLE001
             self._send_json(400, {"error": "JSON invalido: %s" % e})
             return
 
-        fd, tmppath = tempfile.mkstemp(suffix=".g5z80")
-        try:
-            with os.fdopen(fd, "w") as f:
-                f.write(codigo)
-            salida, error = ejecutar_compilador(tmppath)
-            if error:
-                self._send_json(200, {"error": error})
-                return
-            self._send_json(200, parsear_salida_gui(salida))
-        finally:
+        # ── Analisis (lexico + sintactico + semantico + TAC + Z80) ──
+        if self.path == "/analizar":
+            fd, tmppath = tempfile.mkstemp(suffix=".g5z80")
             try:
-                os.remove(tmppath)
-            except OSError:
-                pass
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    f.write(codigo)
+                salida, error = ejecutar_compilador(tmppath)
+                if error:
+                    self._send_json(200, {"error": error})
+                    return
+                self._send_json(200, parsear_salida_gui(salida))
+            finally:
+                try:
+                    os.remove(tmppath)
+                except OSError:
+                    pass
+            return
+
+        # ── Compilar y ejecutar en WinAPE ──
+        if self.path == "/ejecutar":
+            dsk, res, error = compilar_a_dsk(codigo)
+            if error:
+                self._send_json(200, {"ok": False, "error": error,
+                                      "resultado": res})
+                return
+            ruta_dsk, error = lanzar_winape(dsk)
+            if error:
+                self._send_json(200, {"ok": False, "error": error,
+                                      "resultado": res})
+                return
+            self._send_json(200, {
+                "ok": True,
+                "mensaje": "WinAPE abierto: cargando RUN\"MAIN (%d bytes)" % len(dsk),
+                "dsk": os.path.basename(ruta_dsk),
+                "resultado": res,
+            })
+            return
+
+        # ── Descargar la imagen .dsk generada ──
+        if self.path == "/dsk":
+            dsk, res, error = compilar_a_dsk(codigo)
+            if error:
+                self._send_json(200, {"ok": False, "error": error})
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "application/octet-stream")
+            self.send_header("Content-Disposition",
+                             'attachment; filename="programa.dsk"')
+            self.send_header("Content-Length", str(len(dsk)))
+            self.end_headers()
+            self.wfile.write(dsk)
+            return
+
+        self._send(404, "No encontrado", "text/plain")
 
 
 def elegir_puerto(preferido):

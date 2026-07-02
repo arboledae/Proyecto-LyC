@@ -27,6 +27,17 @@ if not exist "%INSTDIR%python\python.exe" (
     goto :error
 )
 
+REM WinAPE: se descarga a tools\winape para que el instalador lo empaquete
+REM (boton "Ejecutar en WinAPE" de la interfaz).
+if not exist "%ROOT%\tools\winape\WinApe.exe" (
+    echo === Descargando WinAPE ===
+    powershell -ExecutionPolicy Bypass -File "%ROOT%\tools\descargar_winape.ps1"
+    if not exist "%ROOT%\tools\winape\WinApe.exe" (
+        echo [AVISO] No se pudo descargar WinAPE: el instalador se generara
+        echo         sin el emulador y el boton Ejecutar pedira instalarlo.
+    )
+)
+
 REM Buscar el compilador de Inno Setup (ISCC.exe).
 set "ISCC="
 if exist "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"

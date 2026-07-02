@@ -67,7 +67,7 @@
 
 
 /* First part of user prologue.  */
-#line 5 "src/parser.y"
+#line 5 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,6 +76,8 @@
 #include "simbolos.h"
 #include "semantico.h"
 #include "gui_salida.h"
+#include "codigo_intermedio.h"
+#include "generador_z80.h"
 
 extern int yylex();
 extern int yyparse();
@@ -114,7 +116,7 @@ int ends_with_g5z80(const char *filename) {
             (ext[5] == '0'));
 }
 
-#line 118 "src/parser.tab.c"
+#line 120 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -585,11 +587,11 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   100,   100,   140,   145,   151,   152,   153,   154,   155,
-     156,   160,   164,   171,   172,   173,   177,   184,   189,   198,
-     206,   213,   217,   224,   228,   232,   236,   240,   247,   248,
-     249,   250,   251,   252,   256,   257,   258,   259,   260,   261,
-     262,   263,   264,   265,   266,   267
+       0,   102,   102,   162,   167,   173,   174,   175,   176,   177,
+     178,   182,   186,   193,   194,   195,   199,   206,   211,   220,
+     228,   235,   239,   246,   250,   254,   258,   262,   269,   270,
+     271,   272,   273,   274,   278,   279,   280,   281,   282,   283,
+     284,   285,   286,   287,   288,   289
 };
 #endif
 
@@ -1211,7 +1213,7 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* programa: KW_INICIO DELIM_LLAVE_IZQ sentencias DELIM_LLAVE_DER  */
-#line 101 "src/parser.y"
+#line 103 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         NodoAST *raiz = nuevo_nodo(NODO_PROGRAMA);
         raiz->izq = (yyvsp[-1].nodo);
@@ -1228,6 +1230,18 @@ yyreduce:
             emitir_simbolos_gui();
             printf("@@ERRORES\n");
             emitir_errores_gui();
+
+            /* Fases 4 y 5: codigo intermedio y Z80 (solo sin errores). */
+            printf("@@INTERMEDIO\n");
+            if (!sem_con_errores) {
+                generar_tac(raiz);
+                emitir_tac_gui();
+            }
+            printf("@@Z80\n");
+            if (!sem_con_errores) {
+                emitir_z80_gui();
+                liberar_tac();
+            }
         } else {
             /* Salida legible para consola. */
             printf("\n==================================================\n");
@@ -1242,307 +1256,315 @@ yyreduce:
             analizar_semantico(raiz);
             imprimir_tabla();
             imprimir_errores_sem();
+
+            /* Fases 4 y 5: codigo intermedio (TAC) y ensamblador Z80 */
+            if (!hay_errores_sem()) {
+                generar_tac(raiz);
+                imprimir_tac();
+                imprimir_z80();
+                liberar_tac();
+            }
         }
 
         liberar_errores_sem();
         liberar_tabla();
         liberar_ast(raiz);
     }
-#line 1252 "src/parser.tab.c"
+#line 1274 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 3: /* sentencias: sentencia sentencias  */
-#line 141 "src/parser.y"
+#line 163 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_lista((yyvsp[-1].nodo), (yyvsp[0].nodo));
     }
-#line 1260 "src/parser.tab.c"
+#line 1282 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 4: /* sentencias: %empty  */
-#line 145 "src/parser.y"
+#line 167 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = NULL;
     }
-#line 1268 "src/parser.tab.c"
+#line 1290 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 5: /* sentencia: declaracion DELIM_PUNTO_COMA  */
-#line 151 "src/parser.y"
+#line 173 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                     { (yyval.nodo) = (yyvsp[-1].nodo); }
-#line 1274 "src/parser.tab.c"
+#line 1296 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 6: /* sentencia: asignacion DELIM_PUNTO_COMA  */
-#line 152 "src/parser.y"
+#line 174 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                     { (yyval.nodo) = (yyvsp[-1].nodo); }
-#line 1280 "src/parser.tab.c"
+#line 1302 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 7: /* sentencia: condicional  */
-#line 153 "src/parser.y"
+#line 175 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                     { (yyval.nodo) = (yyvsp[0].nodo); }
-#line 1286 "src/parser.tab.c"
+#line 1308 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 8: /* sentencia: ciclo  */
-#line 154 "src/parser.y"
+#line 176 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                     { (yyval.nodo) = (yyvsp[0].nodo); }
-#line 1292 "src/parser.tab.c"
+#line 1314 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 9: /* sentencia: impresion DELIM_PUNTO_COMA  */
-#line 155 "src/parser.y"
+#line 177 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                     { (yyval.nodo) = (yyvsp[-1].nodo); }
-#line 1298 "src/parser.tab.c"
+#line 1320 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 10: /* sentencia: retorno DELIM_PUNTO_COMA  */
-#line 156 "src/parser.y"
+#line 178 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                     { (yyval.nodo) = (yyvsp[-1].nodo); }
-#line 1304 "src/parser.tab.c"
+#line 1326 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 11: /* declaracion: tipo IDENTIFICADOR OP_ASIGNACION expresion  */
-#line 161 "src/parser.y"
+#line 183 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_declaracion((yyvsp[-3].str), (yyvsp[-2].str), (yyvsp[0].nodo));
     }
-#line 1312 "src/parser.tab.c"
+#line 1334 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 12: /* declaracion: tipo IDENTIFICADOR  */
-#line 165 "src/parser.y"
+#line 187 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_declaracion((yyvsp[-1].str), (yyvsp[0].str), NULL);
     }
-#line 1320 "src/parser.tab.c"
+#line 1342 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 13: /* tipo: KW_NUM  */
-#line 171 "src/parser.y"
+#line 193 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
               { (yyval.str) = "num";  }
-#line 1326 "src/parser.tab.c"
+#line 1348 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 14: /* tipo: KW_DEC  */
-#line 172 "src/parser.y"
+#line 194 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
               { (yyval.str) = "dec";  }
-#line 1332 "src/parser.tab.c"
+#line 1354 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 15: /* tipo: KW_TEXT  */
-#line 173 "src/parser.y"
+#line 195 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
               { (yyval.str) = "text"; }
-#line 1338 "src/parser.tab.c"
+#line 1360 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 16: /* asignacion: IDENTIFICADOR OP_ASIGNACION expresion  */
-#line 178 "src/parser.y"
+#line 200 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_asignacion((yyvsp[-2].str), (yyvsp[0].nodo));
     }
-#line 1346 "src/parser.tab.c"
+#line 1368 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 17: /* condicional: KW_CUANDO DELIM_PAR_IZQ condicion DELIM_PAR_DER DELIM_LLAVE_IZQ sentencias DELIM_LLAVE_DER  */
-#line 186 "src/parser.y"
+#line 208 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_condicional((yyvsp[-4].nodo), (yyvsp[-1].nodo), NULL);
     }
-#line 1354 "src/parser.tab.c"
+#line 1376 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 18: /* condicional: KW_CUANDO DELIM_PAR_IZQ condicion DELIM_PAR_DER DELIM_LLAVE_IZQ sentencias DELIM_LLAVE_DER KW_SINO DELIM_LLAVE_IZQ sentencias DELIM_LLAVE_DER  */
-#line 192 "src/parser.y"
+#line 214 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_condicional((yyvsp[-8].nodo), (yyvsp[-5].nodo), (yyvsp[-1].nodo));
     }
-#line 1362 "src/parser.tab.c"
+#line 1384 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 19: /* ciclo: KW_LOOP DELIM_PAR_IZQ condicion DELIM_PAR_DER DELIM_LLAVE_IZQ sentencias DELIM_LLAVE_DER  */
-#line 200 "src/parser.y"
+#line 222 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_ciclo((yyvsp[-4].nodo), (yyvsp[-1].nodo));
     }
-#line 1370 "src/parser.tab.c"
+#line 1392 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 20: /* impresion: KW_IMPRIMIR DELIM_PAR_IZQ expresion DELIM_PAR_DER  */
-#line 207 "src/parser.y"
+#line 229 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_impresion((yyvsp[-1].nodo));
     }
-#line 1378 "src/parser.tab.c"
+#line 1400 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 21: /* retorno: KW_RETORNAR expresion  */
-#line 214 "src/parser.y"
+#line 236 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_retorno((yyvsp[0].nodo));
     }
-#line 1386 "src/parser.tab.c"
+#line 1408 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 22: /* retorno: KW_RETORNAR  */
-#line 218 "src/parser.y"
+#line 240 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_retorno(NULL);
     }
-#line 1394 "src/parser.tab.c"
+#line 1416 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 23: /* condicion: expresion operador_rel expresion  */
-#line 225 "src/parser.y"
+#line 247 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_op_binario((yyvsp[-1].str), (yyvsp[-2].nodo), (yyvsp[0].nodo));
     }
-#line 1402 "src/parser.tab.c"
+#line 1424 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 24: /* condicion: OP_NOT condicion  */
-#line 229 "src/parser.y"
+#line 251 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_op_unario("!", (yyvsp[0].nodo));
     }
-#line 1410 "src/parser.tab.c"
+#line 1432 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 25: /* condicion: condicion OP_AND condicion  */
-#line 233 "src/parser.y"
+#line 255 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_op_binario("&&", (yyvsp[-2].nodo), (yyvsp[0].nodo));
     }
-#line 1418 "src/parser.tab.c"
+#line 1440 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 26: /* condicion: condicion OP_OR condicion  */
-#line 237 "src/parser.y"
+#line 259 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_op_binario("||", (yyvsp[-2].nodo), (yyvsp[0].nodo));
     }
-#line 1426 "src/parser.tab.c"
+#line 1448 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 27: /* condicion: LIT_BOOLEANO  */
-#line 241 "src/parser.y"
+#line 263 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
     {
         (yyval.nodo) = nodo_booleano((yyvsp[0].entero));
     }
-#line 1434 "src/parser.tab.c"
+#line 1456 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 28: /* operador_rel: OP_MAYOR  */
-#line 247 "src/parser.y"
+#line 269 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                      { (yyval.str) = ">"; }
-#line 1440 "src/parser.tab.c"
+#line 1462 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 29: /* operador_rel: OP_MENOR  */
-#line 248 "src/parser.y"
+#line 270 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                      { (yyval.str) = "<"; }
-#line 1446 "src/parser.tab.c"
+#line 1468 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 30: /* operador_rel: OP_MAYOR_IGUAL  */
-#line 249 "src/parser.y"
+#line 271 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                      { (yyval.str) = ">="; }
-#line 1452 "src/parser.tab.c"
+#line 1474 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 31: /* operador_rel: OP_MENOR_IGUAL  */
-#line 250 "src/parser.y"
+#line 272 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                      { (yyval.str) = "<="; }
-#line 1458 "src/parser.tab.c"
+#line 1480 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 32: /* operador_rel: OP_IGUAL  */
-#line 251 "src/parser.y"
+#line 273 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                      { (yyval.str) = "=="; }
-#line 1464 "src/parser.tab.c"
+#line 1486 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 33: /* operador_rel: OP_DIFERENTE  */
-#line 252 "src/parser.y"
+#line 274 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                      { (yyval.str) = "!="; }
-#line 1470 "src/parser.tab.c"
+#line 1492 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 34: /* expresion: expresion OP_SUMA expresion  */
-#line 256 "src/parser.y"
+#line 278 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                                { (yyval.nodo) = nodo_op_binario("+",  (yyvsp[-2].nodo), (yyvsp[0].nodo)); }
-#line 1476 "src/parser.tab.c"
+#line 1498 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 35: /* expresion: expresion OP_RESTA expresion  */
-#line 257 "src/parser.y"
+#line 279 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                                { (yyval.nodo) = nodo_op_binario("-",  (yyvsp[-2].nodo), (yyvsp[0].nodo)); }
-#line 1482 "src/parser.tab.c"
+#line 1504 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 36: /* expresion: expresion OP_MULT expresion  */
-#line 258 "src/parser.y"
+#line 280 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                                { (yyval.nodo) = nodo_op_binario("*",  (yyvsp[-2].nodo), (yyvsp[0].nodo)); }
-#line 1488 "src/parser.tab.c"
+#line 1510 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 37: /* expresion: expresion OP_DIV expresion  */
-#line 259 "src/parser.y"
+#line 281 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                                { (yyval.nodo) = nodo_op_binario("/",  (yyvsp[-2].nodo), (yyvsp[0].nodo)); }
-#line 1494 "src/parser.tab.c"
+#line 1516 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 38: /* expresion: expresion OP_MOD expresion  */
-#line 260 "src/parser.y"
+#line 282 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                                { (yyval.nodo) = nodo_op_binario("%",  (yyvsp[-2].nodo), (yyvsp[0].nodo)); }
-#line 1500 "src/parser.tab.c"
+#line 1522 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 39: /* expresion: OP_RESTA expresion  */
-#line 261 "src/parser.y"
+#line 283 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                                { (yyval.nodo) = nodo_op_unario("-",   (yyvsp[0].nodo));     }
-#line 1506 "src/parser.tab.c"
+#line 1528 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 40: /* expresion: DELIM_PAR_IZQ expresion DELIM_PAR_DER  */
-#line 262 "src/parser.y"
+#line 284 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                               { (yyval.nodo) = (yyvsp[-1].nodo); }
-#line 1512 "src/parser.tab.c"
+#line 1534 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 41: /* expresion: LIT_ENTERO  */
-#line 263 "src/parser.y"
+#line 285 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                                { (yyval.nodo) = nodo_entero((yyvsp[0].entero));    }
-#line 1518 "src/parser.tab.c"
+#line 1540 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 42: /* expresion: LIT_DECIMAL  */
-#line 264 "src/parser.y"
+#line 286 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                                { (yyval.nodo) = nodo_decimal((yyvsp[0].str));   }
-#line 1524 "src/parser.tab.c"
+#line 1546 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 43: /* expresion: LIT_TEXT  */
-#line 265 "src/parser.y"
+#line 287 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                                { (yyval.nodo) = nodo_texto((yyvsp[0].str));     }
-#line 1530 "src/parser.tab.c"
+#line 1552 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 44: /* expresion: LIT_BOOLEANO  */
-#line 266 "src/parser.y"
+#line 288 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                                { (yyval.nodo) = nodo_booleano((yyvsp[0].entero));  }
-#line 1536 "src/parser.tab.c"
+#line 1558 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
   case 45: /* expresion: IDENTIFICADOR  */
-#line 267 "src/parser.y"
+#line 289 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
                                                { (yyval.nodo) = nodo_id((yyvsp[0].str));        }
-#line 1542 "src/parser.tab.c"
+#line 1564 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
     break;
 
 
-#line 1546 "src/parser.tab.c"
+#line 1568 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.tab.c"
 
       default: break;
     }
@@ -1735,7 +1757,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 270 "src/parser.y"
+#line 292 "C:\\Users\\Steveen\\Documents\\Proyectos\\Proyecto-LyC\\src\\parser.y"
 
 
 /* ----- FUNCIONES DE SOPORTE ------ */
@@ -1770,13 +1792,14 @@ static int correr_gui(void) {
             printf("sintactico|%d|%s\n", linea_error_sint, msg_error_sint);
         else
             printf("sintactico|%d|error de sintaxis\n", yylineno);
+        printf("@@INTERMEDIO\n@@Z80\n");
     }
 
     printf("@@ESTADO\n");
     printf("sintactico|%s\n", ok ? "ok" : "error");
-    if (!ok)                  printf("semantico|na\n");
-    else if (sem_con_errores) printf("semantico|error\n");
-    else                      printf("semantico|ok\n");
+    if (!ok)                  printf("semantico|na\nintermedio|na\nz80|na\n");
+    else if (sem_con_errores) printf("semantico|error\nintermedio|na\nz80|na\n");
+    else                      printf("semantico|ok\nintermedio|ok\nz80|ok\n");
     printf("@@END\n");
     return 0;
 }

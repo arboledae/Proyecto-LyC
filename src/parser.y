@@ -10,6 +10,8 @@
 #include "simbolos.h"
 #include "semantico.h"
 #include "gui_salida.h"
+#include "codigo_intermedio.h"
+#include "generador_z80.h"
 
 extern int yylex();
 extern int yyparse();
@@ -114,6 +116,18 @@ programa:
             emitir_simbolos_gui();
             printf("@@ERRORES\n");
             emitir_errores_gui();
+
+            /* Fases 4 y 5: codigo intermedio y Z80 (solo sin errores). */
+            printf("@@INTERMEDIO\n");
+            if (!sem_con_errores) {
+                generar_tac(raiz);
+                emitir_tac_gui();
+            }
+            printf("@@Z80\n");
+            if (!sem_con_errores) {
+                emitir_z80_gui();
+                liberar_tac();
+            }
         } else {
             /* Salida legible para consola. */
             printf("\n==================================================\n");
@@ -128,6 +142,14 @@ programa:
             analizar_semantico(raiz);
             imprimir_tabla();
             imprimir_errores_sem();
+
+            /* Fases 4 y 5: codigo intermedio (TAC) y ensamblador Z80 */
+            if (!hay_errores_sem()) {
+                generar_tac(raiz);
+                imprimir_tac();
+                imprimir_z80();
+                liberar_tac();
+            }
         }
 
         liberar_errores_sem();
@@ -301,13 +323,14 @@ static int correr_gui(void) {
             printf("sintactico|%d|%s\n", linea_error_sint, msg_error_sint);
         else
             printf("sintactico|%d|error de sintaxis\n", yylineno);
+        printf("@@INTERMEDIO\n@@Z80\n");
     }
 
     printf("@@ESTADO\n");
     printf("sintactico|%s\n", ok ? "ok" : "error");
-    if (!ok)                  printf("semantico|na\n");
-    else if (sem_con_errores) printf("semantico|error\n");
-    else                      printf("semantico|ok\n");
+    if (!ok)                  printf("semantico|na\nintermedio|na\nz80|na\n");
+    else if (sem_con_errores) printf("semantico|error\nintermedio|na\nz80|na\n");
+    else                      printf("semantico|ok\nintermedio|ok\nz80|ok\n");
     printf("@@END\n");
     return 0;
 }

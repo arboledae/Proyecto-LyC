@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Compilador Dummy — Analizador Léxico / Sintáctico / Semántico</title>
+  <title>Compilador Dummy — Léxico / Sintáctico / Semántico / Intermedio / Z80</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
     <div class="titulo-app">
       <h1>🛠️ Compilador Dummy <span class="grupo">Grupo 5</span></h1>
-      <p class="sub">Verificador de los niveles de análisis · Léxico · Sintáctico · Semántico</p>
+      <p class="sub">Léxico · Sintáctico · Semántico · Código intermedio · Z80 (Amstrad CPC)</p>
     </div>
     <div class="pipeline" id="pipeline">
       <span class="fase" data-fase="lexico">① Léxico <b>—</b></span>
@@ -18,6 +18,10 @@
       <span class="fase" data-fase="sintactico">② Sintáctico <b>—</b></span>
       <span class="flecha">→</span>
       <span class="fase" data-fase="semantico">③ Semántico <b>—</b></span>
+      <span class="flecha">→</span>
+      <span class="fase" data-fase="intermedio">④ Intermedio <b>—</b></span>
+      <span class="flecha">→</span>
+      <span class="fase" data-fase="z80">⑤ Z80 <b>—</b></span>
     </div>
   </header>
 
@@ -39,7 +43,11 @@
         <button id="btn-lexico">🔍 Léxico</button>
         <button id="btn-sintactico">🌳 Sintáctico</button>
         <button id="btn-semantico">✅ Semántico</button>
+        <button id="btn-intermedio">🧮 Intermedio</button>
         <button id="btn-todo" class="primario">⚡ Analizar Todo</button>
+      </div>
+      <div class="botones">
+        <button id="btn-ejecutar" class="ejecutar" title="Compila a Z80, crea el disco y abre el emulador WinAPE">🕹️ Ejecutar en WinAPE</button>
       </div>
       <div id="estado" class="estado"></div>
     </section>
@@ -50,6 +58,8 @@
         <button class="pest activa" data-vista="lexico">Léxico <span id="cont-lexico" class="pill"></span></button>
         <button class="pest" data-vista="sintactico">Sintáctico <span id="cont-sintactico" class="pill"></span></button>
         <button class="pest" data-vista="semantico">Semántico <span id="cont-semantico" class="pill"></span></button>
+        <button class="pest" data-vista="intermedio">Intermedio <span id="cont-intermedio" class="pill"></span></button>
+        <button class="pest" data-vista="z80">Z80 <span id="cont-z80" class="pill"></span></button>
       </nav>
 
       <!-- LÉXICO -->
@@ -84,12 +94,37 @@
         <h2>Diagnósticos</h2>
         <ul id="lista-errores" class="errores"></ul>
       </div>
+
+      <!-- CÓDIGO INTERMEDIO -->
+      <div id="vista-intermedio" class="vista">
+        <h2>Código intermedio — cuádruplas (tres direcciones)</h2>
+        <div id="resumen-intermedio" class="resumen"></div>
+        <div class="tabla-wrap">
+          <table id="tabla-intermedio">
+            <thead><tr><th>#</th><th>Operación</th><th>Arg 1</th><th>Arg 2</th><th>Resultado</th><th>Instrucción</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Z80 -->
+      <div id="vista-z80" class="vista">
+        <div class="barra">
+          <h2>Código Z80 generado (Amstrad CPC · CPCtelera/WinAPE)</h2>
+          <div class="barra-acc">
+            <button id="btn-ejecutar2" class="mini mini-ejecutar" title="Abrir WinAPE con el programa">🕹️ Ejecutar</button>
+            <button id="btn-dsk" class="mini" title="Descargar la imagen de disco .dsk">💾 Descargar .DSK</button>
+          </div>
+        </div>
+        <div id="resumen-z80" class="resumen"></div>
+        <pre id="listado-z80" class="asm"></pre>
+      </div>
     </section>
   </main>
 
   <footer>
     <small>Universidad Nacional Mayor de San Marcos · Lenguajes y Compiladores · Grupo 5
-      · Lenguaje <b>Dummy</b> (próxima fase: generación de código Z80)</small>
+      · Lenguaje <b>Dummy</b> → código intermedio → Z80 · el programa pinta un cuadro de bits en el CPC (WinAPE)</small>
   </footer>
 
   <script src="app.js"></script>

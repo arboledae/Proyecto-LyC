@@ -49,6 +49,12 @@ jobs:
           Invoke-WebRequest -Uri $url -OutFile python-embed.zip
           Expand-Archive -Path python-embed.zip -DestinationPath installer/python -Force
 
+      # WinAPE se empaqueta en el instalador para el boton "Ejecutar en WinAPE".
+      - name: Descargar WinAPE (emulador Amstrad CPC)
+        shell: pwsh
+        continue-on-error: true
+        run: powershell -ExecutionPolicy Bypass -File tools/descargar_winape.ps1
+
       - name: Instalar Inno Setup
         shell: pwsh
         run: choco install innosetup -y --no-progress
