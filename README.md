@@ -12,6 +12,27 @@ Incluye una **interfaz gráfica web** que visualiza cada fase, un **ensamblador 
 
 ---
 
+## ⬇️ Descargar e instalar (para los compañeros)
+
+**No hace falta compilar nada.** Descarga el instalador ya listo (Python va embebido,
+no necesitas instalar nada):
+
+- En **Releases** → `CompiladorLyC-Setup.exe` (etiqueta *Instalador de Windows*), o
+- En la pestaña **Actions** → última ejecución de *"Instalador de Windows"* → artefacto **`CompiladorLyC-Setup`**.
+
+Ejecuta el `Setup.exe` (instala por usuario, **no pide administrador**), abre el acceso
+directo **"Compilador LyC"** y se abre solo el navegador con la interfaz. Para cerrarlo,
+cierra la ventana negra (consola) del servidor.
+
+> **¿Cómo se genera ese instalador?** Automáticamente en **GitHub Actions**: pestaña
+> *Actions* → *"Instalador de Windows"* → **Run workflow** (o empuja un tag de versión,
+> p. ej. `git tag v1.0.0 && git push --tags`). El instalador queda como artefacto y como
+> Release descargable. Para generarlo a mano en tu PC, ver [`installer/BUILD.md`](installer/BUILD.md).
+
+> 📖 ¿Cómo está construido el compilador por dentro? Ver [`IMPLEMENTACION.md`](IMPLEMENTACION.md).
+
+---
+
 ## 📂 Estructura del Proyecto
 
 ```text
@@ -48,9 +69,14 @@ Proyecto-LyC/
 │   └── descargar_winape.ps1       # Descarga WinAPE (emulador Amstrad CPC)
 ├── .github/workflows/
 │   └── windows-installer.yml      # CI: compila y genera el instalador automáticamente
+├── docs/                          # Documentación e informes del curso (PDF)
 ├── Makefile                       # Automatiza bison/flex/gcc y lanza la GUI
+├── IMPLEMENTACION.md              # Cómo funciona el compilador por dentro (por fase)
 └── README.md
 ```
+
+> Los archivos generados por Bison/Flex (`src/lex.yy.c`, `src/parser.tab.c/.h`) **no se
+> versionan**: los regenera `make` (o el CI) a partir de `parser.y` y `lexer.l`.
 
 ---
 
@@ -194,8 +220,8 @@ Linealiza el AST en cuádruplas de tres direcciones (`op`, `arg1`, `arg2`, `res`
 ### Fase 5 – Generación de Código Z80 (Amstrad CPC)
 Traduce las cuádruplas TAC a ensamblador Z80 para el Amstrad CPC:
 - Variables y temporales: palabras de 16 bits con signo.
-- `imprimir` de texto usa el firmware del CPC (`&BB5A`).
-- El programa pinta un cuadro de bits escribiendo en la memoria de video (`&C000`) y queda en un bucle infinito.
+- `imprimir` de texto y de números usa el firmware del CPC (`&BB5A` TXT_OUTPUT).
+- Al terminar, el programa queda en un bucle infinito (no hay sistema operativo al que volver); la salida ya quedó impresa en pantalla con `imprimir()`.
 - `org &4000`: se carga y ejecuta con `RUN"MAIN` en el emulador.
 
 ---

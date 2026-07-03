@@ -393,28 +393,61 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self._send(404, "No encontrado", "text/plain")
 
 
-def elegir_puerto(preferido):
-    """Devuelve `preferido` si esta libre; si no, pide un puerto al sistema."""
+def hay_servidor_escuchando(puerto):
+    """True si algo YA esta escuchando en 127.0.0.1:puerto.
+
+    Se comprueba con una conexion real (connect) y no intentando bind:
+    en Windows http.server activa SO_REUSEADDR, asi que un bind sobre un
+    puerto ya ocupado por otro servidor tiene exito de todos modos (dos
+    procesos escuchando el mismo puerto), lo que haria inutil detectar el
+    conflicto con try/except. connect() si distingue de forma fiable."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.3)
+        return s.connect_ex(("127.0.0.1", puerto)) == 0
+
+
+def crear_servidor(preferido, intentos=10):
+    """Levanta el HTTPServer en `preferido`; si ya hay otro servidor ahi
+    prueba preferido+1, +2, ... (puertos predecibles, no aleatorios) para
+    que el usuario pueda encontrarlo facilmente. Devuelve (servidor,
+    puerto, conflicto) donde `conflicto` indica que el puerto preferido ya
+    estaba en uso (normalmente por OTRA instancia del compilador abierta)."""
+    for i in range(intentos):
+        puerto = preferido + i
+        if hay_servidor_escuchando(puerto):
+            continue                      # ya hay un servidor ahi: saltar
         try:
-            s.bind(("127.0.0.1", preferido))
-            return preferido
+            # ThreadingHTTPServer (un hilo por peticion): el HTTPServer
+            # normal es de un solo hilo, asi que un cliente lento o una
+            # pestaña del navegador que deja una conexion a medias bloquea
+            # TODAS las demas peticiones. La GUI dispara varias a la vez y
+            # ademas lanzar WinAPE no debe congelar los analisis.
+            servidor = http.server.ThreadingHTTPServer(("127.0.0.1", puerto), Handler)
+            return servidor, puerto, (i > 0)
         except OSError:
-            s.bind(("127.0.0.1", 0))
-            return s.getsockname()[1]
+            continue
+    raise SystemExit("No se pudo abrir ningun puerto entre %d y %d."
+                     % (preferido, preferido + intentos - 1))
 
 
 def main():
-    puerto = elegir_puerto(PORT)
+    server, puerto, conflicto = crear_servidor(PORT)
     url = "http://localhost:%d" % puerto
     print("=" * 60)
     print("  Interfaz grafica del Compilador Dummy  -  Grupo 5")
+    if conflicto:
+        # El puerto por defecto estaba ocupado: casi siempre es otra copia
+        # (p.ej. la version instalada en 'C:\\Program Files\\Compilador LyC')
+        # que sigue abierta. Avisamos fuerte para que el usuario no confunda
+        # este servidor con el otro al escribir localhost:5000 de memoria.
+        print("  [AVISO] El puerto %d ya estaba ocupado por OTRA instancia." % PORT)
+        print("          Puede ser una copia instalada o una ventana anterior.")
+        print("          Este servidor esta en el puerto %d." % puerto)
     print("  Abre en el navegador:  %s" % url)
     print("  (cierra esta ventana para detener el servidor)")
     print("=" * 60)
     if not os.path.isfile(COMPILADOR):
         print("[AVISO] No se encontro 'compilador'. Ejecuta 'make' primero.")
-    server = http.server.HTTPServer(("127.0.0.1", puerto), Handler)
     # Abrir el navegador predeterminado una vez que el servidor este escuchando.
     threading.Timer(1.0, lambda: webbrowser.open(url)).start()
     try:

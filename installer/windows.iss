@@ -39,8 +39,8 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 ; Python embebido y los .exe de MinGW son de 64 bits.
-ArchitecturesAllowed=x64
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
 UninstallDisplayName={#AppName}
 

@@ -94,6 +94,16 @@ int ends_with_g5z80(const char *filename) {
 
 %start programa
 
+/* 1 conflicto reduce/reduce esperado e inofensivo: dentro de un
+   parentesis, un LIT_BOOLEANO aislado (p.ej. "(verdadero)") podria
+   reducirse como "condicion" (regla 26, parentesis de condicion) o
+   como "expresion" (que tambien acepta LIT_BOOLEANO like factor).
+   Bison resuelve a favor de la regla declarada primero (condicion),
+   que es la interpretacion sensata: un booleano solo entre parentesis
+   siempre se usa como condicion completa, nunca como el operando de
+   una comparacion relacional. (Bison no soporta %expect-rr fuera de
+   parsers GLR, asi que el conflicto solo queda documentado aqui.) */
+
 %%
 
 /* ------ REGLAS GRAMATICALES ----- */
@@ -258,6 +268,10 @@ condicion:
     | condicion OP_OR condicion
     {
         $$ = nodo_op_binario("||", $1, $3);
+    }
+    | DELIM_PAR_IZQ condicion DELIM_PAR_DER
+    {
+        $$ = $2;
     }
     | LIT_BOOLEANO
     {

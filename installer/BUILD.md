@@ -1,5 +1,10 @@
 # Cómo generar el instalador de Windows (`CompiladorLyC-Setup.exe`)
 
+> **La forma fácil es GitHub Actions**, que hace todo esto automáticamente:
+> pestaña *Actions* → *"Instalador de Windows"* → **Run workflow** (o empuja un tag
+> `v1.0.0`). El instalador queda como artefacto y como Release descargable.
+> Esta guía es solo para generarlo **a mano en tu propia máquina Windows**.
+
 Estos pasos se hacen **una sola vez en tu máquina Windows** para producir el
 instalador. Una vez generado, tus compañeros solo ejecutan el `Setup.exe`: no
 necesitan instalar nada (Python va embebido). Al abrir el programa instalado se

@@ -6,6 +6,12 @@ analizador_sintactico.exe
 compilador
 compilador.exe
 
+# Archivos generados por Bison y Flex (se regeneran con `make`)
+src/lex.yy.c
+src/parser.tab.c
+src/parser.tab.h
+src/parser.output
+
 # Archivos de depuración y temporales
 *.o
 *.out
@@ -14,8 +20,10 @@ __pycache__/
 *.pyc
 
 # Artefactos del build del instalador de Windows
+# (Python embebido: se descarga/descomprime; el instalador: lo genera Inno Setup)
 installer/python/
 installer/Output/
+installer/*.zip
 
 # Herramientas locales descargadas (toolchain portable, WinAPE, Python)
 # Solo se versiona el script que las descarga.

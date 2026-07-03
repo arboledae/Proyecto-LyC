@@ -4,13 +4,6 @@
 #include "codigo_intermedio.h"
 #include "generador_z80.h"
 
-/* Posicion y tamano del cuadro de bits (modo 1: 80 bytes/linea,
-   4 pixeles por byte; 255 = 4 pixeles con la pluma 3).          */
-#define CUADRO_FILA   120   /* primera linea de pixeles          */
-#define CUADRO_ALTO    56   /* alto en lineas                    */
-#define CUADRO_COL     32   /* columna inicial (en bytes)        */
-#define CUADRO_ANCHO   16   /* ancho en bytes (16 = 64 pixeles)  */
-
 /* ── Pool de cadenas (deduplicadas) ─────────────────────────── */
 static char **strs   = NULL;
 static int  n_strs   = 0;
@@ -239,12 +232,13 @@ static void generar_listado(void) {
     for (const Cuad *c = tac_cuadruplas(); c; c = c->sig, n++)
         traducir(c, n);
 
-    /* Epilogo: pinta el cuadro de bits y congela el resultado. */
-    printf("\n; --- fin del programa: pintar el cuadro de bits ---\n");
+    /* Epilogo: no hay sistema operativo al que volver, asi que el
+       programa se queda en un bucle infinito tras terminar (la
+       salida ya quedo impresa en pantalla con imprimir()).        */
+    printf("\n; --- fin del programa ---\n");
     printf("__fin:\n");
-    printf("        call __cuadro\n");
     printf("__stop:\n");
-    printf("        jp __stop           ; resultado visible en pantalla\n");
+    printf("        jp __stop           ; el programa ya termino su trabajo\n");
 
     printf("\n; ============ rutinas de soporte (runtime) =================\n");
     printf("\n; --- imprime la cadena terminada en 0 apuntada por HL ---\n");
@@ -422,59 +416,6 @@ static void generar_listado(void) {
     printf("        and 128\n");
     printf("        ret z\n");
     printf("        jp __neghl\n");
-
-    printf("\n; --- pinta el cuadro de bits en la RAM de video (&C000) ---\n");
-    printf("__cuadro:\n");
-    printf("        ld c,%d            ; fila inicial\n", CUADRO_FILA);
-    printf("        ld b,%d             ; alto en lineas\n", CUADRO_ALTO);
-    printf("__cua1:\n");
-    printf("        push bc\n");
-    printf("        call __cuadir\n");
-    printf("        ld b,%d             ; ancho en bytes\n", CUADRO_ANCHO);
-    printf("        ld a,255            ; 4 pixeles con la pluma 3\n");
-    printf("__cua2:\n");
-    printf("        ld (hl),a\n");
-    printf("        inc hl\n");
-    printf("        djnz __cua2\n");
-    printf("        pop bc\n");
-    printf("        inc c\n");
-    printf("        djnz __cua1\n");
-    printf("        ret\n");
-
-    printf("\n; --- HL = direccion de video de la fila C (+ columna) ---\n");
-    printf("__cuadir:\n");
-    printf("        ld a,c\n");
-    printf("        and 7\n");
-    printf("        rlca\n");
-    printf("        rlca\n");
-    printf("        rlca                ; (fila AND 7) * 8\n");
-    printf("        add a,192           ; + &C0 => byte alto\n");
-    printf("        ld h,a\n");
-    printf("        ld l,0\n");
-    printf("        ld a,c\n");
-    printf("        rrca\n");
-    printf("        rrca\n");
-    printf("        rrca\n");
-    printf("        and 31              ; fila / 8\n");
-    printf("        ld e,a\n");
-    printf("        ld d,0\n");
-    printf("        push hl\n");
-    printf("        ld h,d\n");
-    printf("        ld l,e\n");
-    printf("        add hl,hl\n");
-    printf("        add hl,hl\n");
-    printf("        add hl,hl\n");
-    printf("        add hl,hl           ; * 16\n");
-    printf("        ld e,l\n");
-    printf("        ld d,h\n");
-    printf("        add hl,hl\n");
-    printf("        add hl,hl           ; * 64\n");
-    printf("        add hl,de           ; * 80\n");
-    printf("        pop de\n");
-    printf("        add hl,de           ; + base de video\n");
-    printf("        ld de,%d            ; + columna\n", CUADRO_COL);
-    printf("        add hl,de\n");
-    printf("        ret\n");
 
     /* ── Datos: variables, temporales y cadenas ── */
     printf("\n; ==================== datos ================================\n");
