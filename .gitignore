@@ -29,3 +29,4 @@ installer/*.zip
 # Solo se versiona el script que las descarga.
 tools/*
 !tools/descargar_winape.ps1
+!tools/descargar_winape.sh

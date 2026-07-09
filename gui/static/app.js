@@ -31,7 +31,7 @@ async function cargarListaEjemplos() {
     const r = await fetch('/ejemplos');
     const lista = await r.json();
     const sel = $('sel-ejemplo');
-    sel.innerHTML = '<option value="">— Cargar ejemplo —</option>';
+    sel.innerHTML = '<option value="">Seleccionar ejemplo</option>';
     lista.forEach(e => {
       const o = document.createElement('option');
       o.value = e.archivo; o.textContent = e.nombre;
@@ -50,14 +50,10 @@ $('sel-ejemplo').addEventListener('change', async (ev) => {
 });
 
 // ── Botones ──
-$('btn-lexico').addEventListener('click',     () => { analizar('lexico'); });
-$('btn-sintactico').addEventListener('click', () => { analizar('sintactico'); });
-$('btn-semantico').addEventListener('click',  () => { analizar('semantico'); });
-$('btn-intermedio').addEventListener('click', () => { analizar('intermedio'); });
-$('btn-todo').addEventListener('click',       () => { analizar(); });
-$('btn-ejecutar').addEventListener('click',   () => { ejecutarWinape(); });
-$('btn-ejecutar2').addEventListener('click',  () => { ejecutarWinape(); });
-$('btn-dsk').addEventListener('click',        () => { descargarDsk(); });
+$('btn-todo').addEventListener('click', () => { analizar(); });
+$('btn-ejecutar').addEventListener('click', () => { ejecutarWinape(); });
+$('btn-ejecutar2').addEventListener('click', () => { ejecutarWinape(); });
+$('btn-dsk').addEventListener('click', () => { descargarDsk(); });
 
 async function analizar(vista) {
   const codigo = editor.value;
@@ -105,7 +101,7 @@ async function ejecutarWinape() {
       actualizarPipeline(data.resultado);
     }
     if (data.ok) {
-      setEstado('🕹️ ' + data.mensaje + ' — el cuadro de bits aparecerá en la pantalla del CPC.', 'ok');
+      setEstado(data.mensaje + ' — el cuadro de bits aparecerá en la pantalla del CPC.', 'ok');
     } else {
       setEstado(data.error || 'No se pudo ejecutar.', 'err');
       if (data.resultado) activarVista('semantico');
@@ -137,7 +133,7 @@ async function descargarDsk() {
     a.download = 'programa.dsk';
     a.click();
     URL.revokeObjectURL(a.href);
-    setEstado('💾 programa.dsk descargado (ábrelo en WinAPE y escribe RUN"MAIN).', 'ok');
+    setEstado('programa.dsk descargado (ábrelo en WinAPE y escribe RUN"MAIN).', 'ok');
   } catch (e) {
     setEstado('Error de conexión: ' + e, 'err');
   }
@@ -162,7 +158,6 @@ function categoria(token) {
 function renderTokens(tokens) {
   const tb = $('tabla-tokens').querySelector('tbody');
   tb.innerHTML = '';
-  $('cont-lexico').textContent = tokens.length || '';
   const conteo = {};
   tokens.forEach((t, i) => {
     const [cat, desc] = categoria(t.token);
@@ -180,8 +175,8 @@ function renderTokens(tokens) {
   ley.innerHTML = Object.keys(conteo).map(d => {
     const cat = categoria(d === 'Palabra clave' ? 'KW_' : d === 'Literal' ? 'LIT_' :
       d === 'Operador' ? 'OP_' : d === 'Delimitador' ? 'DELIM_' :
-      d === 'Error léxico' ? 'TOKEN_' : 'IDENTIFICADOR')[0];
-    return '<span class="badge cat-' + cat + '">' + d + ': ' + conteo[d] + '</span>';
+        d === 'Error léxico' ? 'TOKEN_' : 'IDENTIFICADOR')[0];
+    return '<span class="badge cat-' + cat + '">' + d + ' <span class="badge-count">' + conteo[d] + '</span></span>';
   }).join(' ');
 }
 
@@ -200,10 +195,9 @@ function claseNodo(label) {
 function renderAST(nodos) {
   const cont = $('arbol-ast');
   cont.innerHTML = '';
-  $('cont-sintactico').textContent = nodos.length || '';
   if (!nodos.length) {
     $('resumen-sintactico').textContent = 'No se generó AST.';
-    cont.innerHTML = '<p class="aviso">⚠️ No hay árbol: revisa los errores sintácticos en la pestaña Semántico.</p>';
+    cont.innerHTML = '<p class="aviso">No hay árbol: revisa los errores sintácticos en la pestaña Semántico.</p>';
     return;
   }
   $('resumen-sintactico').textContent = nodos.length + ' nodo(s). Haz clic en un nodo con hijos para plegarlo/desplegarlo.';
@@ -247,7 +241,7 @@ function renderSimbolos(simbolos) {
       '<td><span class="tipo tipo-' + s.tipo + '">' + s.tipo + '</span></td>' +
       '<td><span class="scope scope-' + (sc % 6) + '">' + (sc === 0 ? 'global (0)' : sc) + '</span></td>' +
       '<td>' + s.linea + '</td>' +
-      '<td>' + (s.init === 'si' ? '✅ sí' : '⬜ no') + '</td>';
+      '<td>' + (s.init === 'si' ? 'sí' : 'no') + '</td>';
     tb.appendChild(tr);
   });
 }
@@ -262,14 +256,12 @@ function renderErrores(data) {
     errs.unshift({ tipo: 'lexico', linea: t.linea, mensaje: "Carácter no reconocido: '" + t.lexema + "'" });
   });
 
-  $('cont-semantico').textContent = errs.length || '';
-
   if (!errs.length) {
     const li = document.createElement('li');
     li.className = 'ok';
     li.textContent = data.sintactico_ok
-      ? '✅ Análisis completado sin errores (léxico, sintáctico y semántico correctos).'
-      : '✅ Sin diagnósticos.';
+      ? 'Análisis completado sin errores (léxico, sintáctico y semántico correctos).'
+      : 'Sin diagnósticos.';
     ul.appendChild(li);
     return;
   }
@@ -289,13 +281,12 @@ function renderIntermedio(data) {
   const cuads = data.intermedio || [];
   const tb = $('tabla-intermedio').querySelector('tbody');
   tb.innerHTML = '';
-  $('cont-intermedio').textContent = cuads.length || '';
   if (!cuads.length) {
     $('resumen-intermedio').textContent = '';
     tb.innerHTML = '<tr><td colspan="6" class="vacio">' +
       (data.sintactico_ok && data.semantico_estado === 'ok'
         ? 'Sin código intermedio.'
-        : '⚠️ El código intermedio solo se genera cuando el análisis no tiene errores.') +
+        : 'El código intermedio solo se genera cuando el análisis no tiene errores.') +
       '</td></tr>';
     return;
   }
@@ -328,7 +319,6 @@ function renderZ80(data) {
   const lineas = data.z80 || [];
   const pre = $('listado-z80');
   const soloInstr = lineas.filter(l => l.trim() && !l.trim().startsWith(';')).length;
-  $('cont-z80').textContent = soloInstr || '';
   if (!lineas.length) {
     $('resumen-z80').textContent = '';
     pre.innerHTML = '<span class="cmt">; El código Z80 solo se genera cuando el análisis no tiene errores.</span>';
@@ -368,33 +358,24 @@ function marcarFase(fase, estado, texto) {
 function actualizarPipeline(data) {
   const hayErrLex = (data.tokens || []).some(t => t.token.startsWith('TOKEN_'));
   marcarFase('lexico', hayErrLex ? 'err' : 'ok',
-    hayErrLex ? '✖' : (data.tokens.length + ' tk'));
+    hayErrLex ? '✖' : '✔');
   marcarFase('sintactico', data.sintactico_ok ? 'ok' : 'err',
     data.sintactico_ok ? '✔' : '✖');
   const est = data.semantico_estado;
   marcarFase('semantico', est === 'ok' ? 'ok' : est === 'na' ? 'na' : 'err',
     est === 'ok' ? '✔' : est === 'na' ? '—' : '✖');
-  const nInt = (data.intermedio || []).length;
   marcarFase('intermedio', data.intermedio_estado === 'ok' ? 'ok' : 'na',
-    data.intermedio_estado === 'ok' ? nInt + ' cd' : '—');
-  const nZ80 = (data.z80 || []).filter(l => l.trim() && !l.trim().startsWith(';')).length;
+    data.intermedio_estado === 'ok' ? '✔' : '—');
   marcarFase('z80', data.z80_estado === 'ok' ? 'ok' : 'na',
-    data.z80_estado === 'ok' ? nZ80 + ' ln' : '—');
+    data.z80_estado === 'ok' ? '✔' : '—');
 }
 
 function resumirEstado(data) {
-  const nErr = (data.errores || []).length;
-  let parts = [];
-  parts.push('Léxico: ' + data.tokens.length + ' tokens');
-  parts.push(data.sintactico_ok ? 'Sintáctico: ✅' : 'Sintáctico: ❌');
-  parts.push(data.semantico_estado === 'ok' ? 'Semántico: ✅'
-    : data.semantico_estado === 'na' ? 'Semántico: —'
-    : 'Semántico: ❌ ' + nErr + ' error(es)');
-  parts.push(data.intermedio_estado === 'ok'
-    ? 'Intermedio: ' + (data.intermedio || []).length + ' cuádruplas' : 'Intermedio: —');
-  parts.push(data.z80_estado === 'ok' ? 'Z80: ✅' : 'Z80: —');
-  setEstado(parts.join('   ·   '),
-    data.sintactico_ok && data.semantico_estado === 'ok' ? 'ok' : 'err');
+  if (data.sintactico_ok && data.semantico_estado === 'ok') {
+    setEstado('', 'ok');
+  } else {
+    setEstado('El código contiene errores', 'err');
+  }
 }
 
 // ── Inicio: cargar lista y ejemplo por defecto ──

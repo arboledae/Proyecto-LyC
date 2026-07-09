@@ -266,11 +266,27 @@ Código Dummy → compilador (5 fases) → Z80 ASM → z80asm.py → binario →
 - **`gui/cpcdsk.py`** — Genera imágenes de disco `.dsk` en formato CPCEMU estándar (40 pistas, 9 sectores, cabecera AMSDOS).
 
 ### Instalar WinAPE
+
+#### En Windows
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools\descargar_winape.ps1
 ```
-
 O descárgalo manualmente de [winape.net](http://www.winape.net) y descomprímelo en `tools\winape\`.
+
+#### En Linux (Ubuntu / Debian)
+Para poder usar el botón **"Ejecutar en WinAPE"** en Linux, es necesario contar con `wine` y `unzip`.
+
+1. Instala los prerrequisitos:
+   ```bash
+   sudo apt install wine unzip
+   ```
+2. Descarga y configura el emulador ejecutando el script automatizado:
+   ```bash
+   chmod +x tools/descargar_winape.sh
+   ./tools/descargar_winape.sh
+   ```
+
+El script configurará un wrapper en `tools/winape/WinApe.exe` que traducirá de forma transparente las rutas de archivo de Unix a Wine para que el emulador pueda leer las imágenes de disco `.dsk` temporales sin errores de lectura.
 
 ---
 
