@@ -1,0 +1,12 @@
+digraph afd_rel {
+  rankdir=LR; node [shape=circle, fontname="Arial"];
+  S0 [label="S0"];
+  Smay [shape=doublecircle, label="> "]; SmayI [shape=doublecircle, label=">="];
+  Smen [shape=doublecircle, label="< "]; SmenI [shape=doublecircle, label="<="];
+  Sig0 [label="="]; Sig [shape=doublecircle, label="=="];
+  Sne0 [label="!"]; Sne [shape=doublecircle, label="!="];
+  S0 -> Smay [label=">"]; Smay -> SmayI [label="="];
+  S0 -> Smen [label="<"]; Smen -> SmenI [label="="];
+  S0 -> Sig0 [label="="]; Sig0 -> Sig [label="="];
+  S0 -> Sne0 [label="!"]; Sne0 -> Sne [label="="];
+}

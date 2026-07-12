@@ -1,0 +1,16 @@
+digraph cfg {
+  rankdir=TB; node [shape=box, style="rounded,filled", fillcolor="#EAF0F7", fontname="Arial"];
+  subgraph cluster_cuando {
+    label="cuando / sino"; style=dashed;
+    c1 [label="ifFalse cond -> L_sino"];
+    c2 [label="bloque cuando"]; c3 [label="goto L_fin"];
+    c4 [label="L_sino: bloque sino"]; c5 [label="L_fin:"];
+    c1->c2->c3->c5; c1->c4 [label="falso"]; c4->c5;
+  }
+  subgraph cluster_loop {
+    label="loop"; style=dashed;
+    l1 [label="L_ini:"]; l2 [label="ifFalse cond -> L_fin"];
+    l3 [label="cuerpo"]; l4 [label="goto L_ini"]; l5 [label="L_fin:"];
+    l1->l2->l3->l4->l1; l2->l5 [label="falso"];
+  }
+}

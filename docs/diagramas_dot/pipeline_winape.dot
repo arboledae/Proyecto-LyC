@@ -1,0 +1,10 @@
+digraph winape {
+  rankdir=LR; node [shape=box, style="rounded,filled", fillcolor="#EAF0F7", fontname="Arial"];
+  z [label="Listado Z80\n(texto)"];
+  a [label="z80asm.py\n(2 pasadas)", fillcolor="#E2F0D9"];
+  b [label="binario .bin"];
+  d [label="cpcdsk.py", fillcolor="#E2F0D9"];
+  i [label="imagen .dsk\n(CPCEMU/AMSDOS)"];
+  w [label="WinApe.exe\n/A:MAIN", fillcolor="#F8D7DA"];
+  z->a->b->d->i->w;
+}

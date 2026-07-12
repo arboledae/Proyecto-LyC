@@ -51,6 +51,7 @@ PORT         = 5000
 
 # Ejemplos ofrecidos en el desplegable (archivo -> etiqueta legible).
 EJEMPLOS = [
+    ("juego_adivina.g5z80",           "\U0001F3AE Juego: Adivina el Numero"),
     ("ejemplo1.g5z80",                "Programa valido"),
     ("ejemplo_scopes.g5z80",          "Ambitos anidados (scopes)"),
     ("ejemplo_semantico_error.g5z80", "Errores semanticos"),

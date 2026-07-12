@@ -1,0 +1,14 @@
+digraph pipeline {
+  rankdir=TB; node [shape=box, style="rounded,filled", fillcolor="#EAF0F7", fontname="Arial"];
+  fuente [label="Codigo fuente\n(.g5z80)", fillcolor="#FDF3D0"];
+  lex   [label="1. Analisis Lexico\n(Flex)"];
+  sint  [label="2. Sintactico + AST\n(Bison)"];
+  sem   [label="3. Analisis Semantico\n(tabla de simbolos, tipos)"];
+  tac   [label="4. Codigo Intermedio\n(cuadruplas TAC)"];
+  z80   [label="5. Generacion Z80\n(ensamblador CPC)"];
+  asm   [label="z80asm.py\n(ensamblador)", fillcolor="#E2F0D9"];
+  dsk   [label="cpcdsk.py\n(imagen .dsk)", fillcolor="#E2F0D9"];
+  win   [label="WinAPE\n(Amstrad CPC)", fillcolor="#F8D7DA"];
+  fuente->lex->sint->sem->tac->z80->asm->dsk->win;
+  lex  ->sint [label="tokens"];
+}

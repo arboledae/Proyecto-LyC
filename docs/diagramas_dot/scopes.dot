@@ -1,0 +1,8 @@
+digraph scopes {
+  rankdir=BT; node [shape=box, style=filled, fillcolor="#EAF0F7", fontname="Arial"];
+  g  [label="Ambito 0 (global)  ->  inicio { }"];
+  s1 [label="Ambito 1  ->  cuerpo de cuando/sino/loop"];
+  s2 [label="Ambito 2  ->  bloque anidado"];
+  g -> s1 -> s2 [label="apila"];
+  note [shape=note, fillcolor="#FDF3D0", label="Una variable es visible si su\nambito sigue en la pila activa"];
+}

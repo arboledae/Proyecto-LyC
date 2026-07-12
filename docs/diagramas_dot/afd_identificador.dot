@@ -1,0 +1,6 @@
+digraph afd_id {
+  rankdir=LR; node [shape=circle, fontname="Arial"];
+  S0 [label="S0"]; S1 [shape=doublecircle, label="S1"];
+  S0 -> S1 [label="letra | _"];
+  S1 -> S1 [label="letra | digito | _"];
+}

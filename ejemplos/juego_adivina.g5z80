@@ -1,0 +1,66 @@
+%% ================================================================
+   JUEGO: ADIVINA EL NUMERO
+   Grupo 5 - Lenguaje Dummy -> Amstrad CPC (WinAPE)
+
+   Como el lenguaje Dummy no tiene lectura de teclado (solo imprimir),
+   el juego se "auto-juega": la computadora elige un numero secreto
+   del 1 al 100 con un generador pseudoaleatorio (LCG) y luego lo
+   adivina ella misma por busqueda binaria, narrando cada intento.
+   ================================================================ %%
+inicio {
+  imprimir("=== ADIVINA EL NUMERO ===");
+  imprimir("Secreto entre 1 y 100");
+
+  %% Numero secreto con un LCG:  sem = (sem * 125 + 191) % 256
+     125 = 4*31 + 1  y  191 es impar  => periodo completo 256
+     (condiciones de Hull-Dobell). El maximo intermedio es
+     255*125 + 191 = 32066 < 32767, asi que nunca desborda el
+     entero de 16 bits con signo. %%
+  num sem = 7;
+  sem = (sem * 125 + 191) % 256;
+  num secreto = sem % 100 + 1;
+
+  %% Jugador automatico: busqueda binaria sobre el rango [bajo, alto] %%
+  num bajo = 1;
+  num alto = 100;
+  num intentos = 0;
+  num ganado = 0;
+
+  loop (ganado == 0) {
+    num medio = (bajo + alto) / 2;
+    intentos = intentos + 1;
+
+    imprimir("Pruebo con el numero:");
+    imprimir(medio);
+
+    cuando (medio == secreto) {
+      imprimir("Correcto!");
+      ganado = 1;
+    } sino {
+      cuando (medio < secreto) {
+        imprimir("Muy bajo, subo");
+        bajo = medio + 1;
+      } sino {
+        imprimir("Muy alto, bajo");
+        alto = medio - 1;
+      }
+    }
+
+    %% Pausa visual (~1-2 s en el Amstrad CPC) al terminar cada vuelta,
+       como si el jugador "verificara" antes del siguiente intento.
+       El lenguaje no tiene instruccion de espera, asi que se usa un
+       bucle de espera ocupada: contar hasta un tope grande consume
+       tiempo real de CPU en el Z80. El tope 20000 (< 32767) equivale
+       a ~1.5 s; subelo o bajalo para ajustar la duracion. %%
+    num espera = 0;
+    loop (espera < 20000) {
+      espera = espera + 1;
+    }
+  }
+
+  imprimir("El numero secreto era:");
+  imprimir(secreto);
+  imprimir("Lo adivine en intentos:");
+  imprimir(intentos);
+  imprimir("=== FIN DEL JUEGO ===");
+}

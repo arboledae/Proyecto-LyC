@@ -1,0 +1,17 @@
+digraph ast {
+  node [shape=box, style="rounded,filled", fillcolor="#EAF0F7", fontname="Arial"];
+  prog [label="PROGRAMA"];
+  decl [label="DECLARACION\ntipo=num var=x"];
+  lit5 [label="LIT_ENTERO 5", fillcolor="#FDF3D0"];
+  cu   [label="CUANDO"];
+  cond [label="CONDICION"];
+  op   [label="OP_BIN >"];
+  idx  [label="ID x", fillcolor="#FDF3D0"];
+  lit0 [label="LIT_ENTERO 0", fillcolor="#FDF3D0"];
+  blq  [label="BLOQUE_SI"];
+  imp  [label="IMPRIMIR"];
+  idx2 [label="ID x", fillcolor="#FDF3D0"];
+  prog->decl; decl->lit5;
+  prog->cu; cu->cond; cond->op; op->idx; op->lit0;
+  cu->blq; blq->imp; imp->idx2;
+}

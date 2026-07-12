@@ -101,7 +101,7 @@ async function ejecutarWinape() {
       actualizarPipeline(data.resultado);
     }
     if (data.ok) {
-      setEstado(data.mensaje + ' — el cuadro de bits aparecerá en la pantalla del CPC.', 'ok');
+      setEstado(data.mensaje + ' — la salida del programa aparecerá en la pantalla del CPC.', 'ok');
     } else {
       setEstado(data.error || 'No se pudo ejecutar.', 'err');
       if (data.resultado) activarVista('semantico');
@@ -325,7 +325,7 @@ function renderZ80(data) {
     return;
   }
   $('resumen-z80').textContent = soloInstr + ' línea(s) de ensamblador · org &4000 · ' +
-    'al ejecutarlo, el programa corre en el CPC y pinta el cuadro de bits en pantalla.';
+    'al ejecutarlo, el programa corre en el CPC e imprime su salida en pantalla.';
   pre.innerHTML = lineas.map(l => {
     const e = esc(l);
     if (/^\s*;/.test(l)) return '<span class="cmt">' + e + '</span>';
