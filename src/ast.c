@@ -115,6 +115,46 @@ NodoAST* nodo_lista(NodoAST *sentencia, NodoAST *siguiente) {
     return n;
 }
 
+/* ── Constructores de las primitivas de juego ───────────────── */
+NodoAST* nodo_limpiar(void) {
+    return nuevo_nodo(NODO_LIMPIAR);
+}
+
+NodoAST* nodo_posicionar(NodoAST *x, NodoAST *y) {
+    NodoAST *n = nuevo_nodo(NODO_POSICIONAR);
+    n->izq = x;   /* columna */
+    n->der = y;   /* fila    */
+    return n;
+}
+
+NodoAST* nodo_dibujar(NodoAST *expr) {
+    NodoAST *n = nuevo_nodo(NODO_DIBUJAR);
+    n->izq = expr;
+    return n;
+}
+
+NodoAST* nodo_pintar(NodoAST *expr) {
+    NodoAST *n = nuevo_nodo(NODO_PINTAR);
+    n->izq = expr;
+    return n;
+}
+
+NodoAST* nodo_esperar(NodoAST *expr) {
+    NodoAST *n = nuevo_nodo(NODO_ESPERAR);
+    n->izq = expr;
+    return n;
+}
+
+NodoAST* nodo_leer_tecla(void) {
+    return nuevo_nodo(NODO_LEER_TECLA);
+}
+
+NodoAST* nodo_aleatorio(NodoAST *expr) {
+    NodoAST *n = nuevo_nodo(NODO_ALEATORIO);
+    n->izq = expr;
+    return n;
+}
+
 /* ── Impresión ──────────────────────────────────────────────── */
 
 static void sangria(int nivel) {
@@ -224,6 +264,44 @@ void imprimir_ast(NodoAST *nodo, int nivel) {
 
         case NODO_IDENTIFICADOR:
             printf("[ID] %s\n", nodo->str_val);
+            break;
+
+        case NODO_LIMPIAR:
+            printf("[LIMPIAR]\n");
+            break;
+
+        case NODO_POSICIONAR:
+            printf("[POSICIONAR]\n");
+            sangria(nivel + 1);
+            printf("[COLUMNA]\n");
+            imprimir_ast(nodo->izq, nivel + 2);
+            sangria(nivel + 1);
+            printf("[FILA]\n");
+            imprimir_ast(nodo->der, nivel + 2);
+            break;
+
+        case NODO_DIBUJAR:
+            printf("[DIBUJAR]\n");
+            imprimir_ast(nodo->izq, nivel + 1);
+            break;
+
+        case NODO_PINTAR:
+            printf("[PINTAR]\n");
+            imprimir_ast(nodo->izq, nivel + 1);
+            break;
+
+        case NODO_ESPERAR:
+            printf("[ESPERAR]\n");
+            imprimir_ast(nodo->izq, nivel + 1);
+            break;
+
+        case NODO_LEER_TECLA:
+            printf("[TECLA]\n");
+            break;
+
+        case NODO_ALEATORIO:
+            printf("[ALEATORIO]\n");
+            imprimir_ast(nodo->izq, nivel + 1);
             break;
     }
 }

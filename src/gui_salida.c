@@ -102,6 +102,37 @@ static void emit_nodo(NodoAST *n, int d) {
         case NODO_TEXTO:         printf("%d|LIT_TEXT %s\n", d, n->str_val); break;
         case NODO_BOOLEANO:      printf("%d|LIT_BOOL %s\n", d, n->int_val ? "verdadero" : "falso"); break;
         case NODO_IDENTIFICADOR: printf("%d|ID %s\n", d, n->str_val); break;
+
+        /* ── Primitivas de juego ─────────────────────────────── */
+        case NODO_LIMPIAR:
+            printf("%d|LIMPIAR\n", d);
+            break;
+        case NODO_POSICIONAR:
+            printf("%d|POSICIONAR\n", d);
+            printf("%d|COLUMNA\n", d + 1);
+            emit_nodo(n->izq, d + 2);
+            printf("%d|FILA\n", d + 1);
+            emit_nodo(n->der, d + 2);
+            break;
+        case NODO_DIBUJAR:
+            printf("%d|DIBUJAR\n", d);
+            emit_nodo(n->izq, d + 1);
+            break;
+        case NODO_PINTAR:
+            printf("%d|PINTAR\n", d);
+            emit_nodo(n->izq, d + 1);
+            break;
+        case NODO_ESPERAR:
+            printf("%d|ESPERAR\n", d);
+            emit_nodo(n->izq, d + 1);
+            break;
+        case NODO_LEER_TECLA:
+            printf("%d|TECLA\n", d);
+            break;
+        case NODO_ALEATORIO:
+            printf("%d|ALEATORIO\n", d);
+            emit_nodo(n->izq, d + 1);
+            break;
     }
 }
 

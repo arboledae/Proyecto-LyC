@@ -20,7 +20,17 @@ typedef enum {
     NODO_DECIMAL,
     NODO_TEXTO,
     NODO_BOOLEANO,
-    NODO_IDENTIFICADOR
+    NODO_IDENTIFICADOR,
+    /* ── Primitivas de juego (Amstrad CPC) ─────────────────────
+       Añadidas para poder escribir videojuegos: entrada de teclado,
+       control de pantalla, temporizacion y numeros aleatorios. */
+    NODO_LIMPIAR,        /* limpiar()            -> borra la pantalla   */
+    NODO_POSICIONAR,     /* posicionar(x, y)     -> mueve el cursor      */
+    NODO_DIBUJAR,        /* dibujar(expr)        -> imprime sin salto    */
+    NODO_PINTAR,         /* pintar(codigo)       -> caracter por codigo  */
+    NODO_ESPERAR,        /* esperar(n)           -> espera n cuadros     */
+    NODO_LEER_TECLA,     /* tecla()              -> lee teclado (expr)   */
+    NODO_ALEATORIO       /* aleatorio(n)         -> azar 0..n-1 (expr)   */
 } TipoNodo;
 
 /* ── Estructura del nodo ────────────────────────────────────── */
@@ -50,6 +60,15 @@ NodoAST* nodo_ciclo      (NodoAST *cond, NodoAST *cuerpo);
 NodoAST* nodo_impresion  (NodoAST *expr);
 NodoAST* nodo_retorno    (NodoAST *expr);
 NodoAST* nodo_lista      (NodoAST *sentencia, NodoAST *siguiente);
+
+/* ── Constructores de las primitivas de juego ───────────────── */
+NodoAST* nodo_limpiar    (void);
+NodoAST* nodo_posicionar (NodoAST *x, NodoAST *y);
+NodoAST* nodo_dibujar    (NodoAST *expr);
+NodoAST* nodo_pintar     (NodoAST *expr);
+NodoAST* nodo_esperar    (NodoAST *expr);
+NodoAST* nodo_leer_tecla (void);
+NodoAST* nodo_aleatorio  (NodoAST *expr);
 
 /* ── Utilidades ─────────────────────────────────────────────── */
 void imprimir_ast(NodoAST *nodo, int nivel);

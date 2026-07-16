@@ -1,0 +1,166 @@
+%% ================================================================
+   SPACEWAR  -  Nave, asteroides y disparos
+   Grupo 5 - Lenguaje Dummy  ->  Amstrad CPC (WinAPE)
+
+   Pilotas una nave en la parte inferior. Los asteroides caen desde
+   arriba: dispara para destruirlos (+5 pts) o esquivalos (+1 pt al
+   pasar). Si un asteroide te golpea pierdes una vida. Con 0 vidas:
+   GAME OVER. El juego acelera con el tiempo.
+
+   CONTROLES (3 teclas):
+       O  = mover a la izquierda
+       P  = mover a la derecha
+       ESPACIO = disparar
+
+   Primitivas usadas: limpiar, posicionar, dibujar, pintar, esperar,
+   tecla, aleatorio.
+   ================================================================ %%
+inicio {
+  num nave = 20;      %% columna de la nave (1..40)              %%
+  num ax = 10;        %% columna del asteroide                    %%
+  num ay = 1;         %% fila del asteroide                       %%
+  num bx = 0;         %% columna de la bala                       %%
+  num by = 0;         %% fila de la bala                          %%
+  num bactivo = 0;    %% 1 si hay una bala en vuelo               %%
+  num score = 0;      %% puntaje                                  %%
+  num vidas = 3;      %% vidas restantes                          %%
+  num vel = 14;       %% cuadros por bajada (menor = mas rapido)  %%
+  num t = 0;          %% temporizador de caida                    %%
+  num k = 0;          %% tecla leida                              %%
+  num jugando = 1;    %% 1 mientras el juego sigue                %%
+
+  %% ---------------- Pantalla de titulo ---------------- %%
+  limpiar();
+  posicionar(13, 3);
+  dibujar("S P A C E W A R");
+  posicionar(6, 6);
+  dibujar("O = izq   P = der   ESPACIO = disparar");
+  posicionar(8, 9);
+  dibujar("Destruye o esquiva los asteroides!");
+  posicionar(8, 12);
+  dibujar("Preparate...");
+  esperar(150);
+
+  %% primera columna del asteroide, al azar (2..39) %%
+  ax = aleatorio(38) + 2;
+  limpiar();
+
+  %% ================= BUCLE PRINCIPAL ================= %%
+  loop (jugando == 1) {
+
+    %% --- Entrada de teclado (no bloqueante) --- %%
+    k = tecla();
+
+    %% O = izquierda (acepta mayuscula y minuscula) %%
+    cuando (k == 111 || k == 79) {
+      cuando (nave > 1) {
+        posicionar(nave, 23);
+        dibujar(" ");
+        nave = nave - 1;
+      }
+    }
+    %% P = derecha %%
+    cuando (k == 112 || k == 80) {
+      cuando (nave < 40) {
+        posicionar(nave, 23);
+        dibujar(" ");
+        nave = nave + 1;
+      }
+    }
+    %% ESPACIO = disparar (solo si no hay bala en vuelo) %%
+    cuando (k == 32) {
+      cuando (bactivo == 0) {
+        bactivo = 1;
+        bx = nave;
+        by = 22;
+      }
+    }
+
+    %% --- Movimiento de la bala (sube cada cuadro) --- %%
+    cuando (bactivo == 1) {
+      posicionar(bx, by);
+      dibujar(" ");
+      by = by - 1;
+      cuando (by < 1) {
+        bactivo = 0;
+      }
+      %% impacto bala-asteroide (misma columna y fila) %%
+      cuando (bactivo == 1) {
+        cuando (bx == ax) {
+          cuando (by == ay) {
+            score = score + 5;
+            bactivo = 0;
+            posicionar(ax, ay);
+            dibujar(" ");
+            ay = 1;
+            ax = aleatorio(38) + 2;
+            cuando (vel > 5) {
+              vel = vel - 1;
+            }
+          }
+        }
+      }
+    }
+
+    %% --- Avance del asteroide segun el temporizador --- %%
+    t = t + 1;
+    cuando (t >= vel) {
+      t = 0;
+      posicionar(ax, ay);
+      dibujar(" ");
+      ay = ay + 1;
+
+      %% fila de la nave (23): comprobar choque %%
+      cuando (ay == 23) {
+        cuando (ax == nave) {
+          vidas = vidas - 1;
+          cuando (vidas < 1) {
+            jugando = 0;
+          }
+        }
+      }
+      %% paso el fondo: reaparece arriba y suma punto %%
+      cuando (ay > 23) {
+        ay = 1;
+        ax = aleatorio(38) + 2;
+        score = score + 1;
+        cuando (vel > 5) {
+          vel = vel - 1;
+        }
+      }
+    }
+
+    %% --- Dibujo de la escena --- %%
+    posicionar(ax, ay);
+    pintar(42);                         %% '*' = asteroide %%
+
+    cuando (bactivo == 1) {
+      posicionar(bx, by);
+      pintar(124);                      %% '|' = bala %%
+    }
+
+    posicionar(nave, 23);
+    pintar(94);                         %% '^' = nave      %%
+
+    %% marcador (fila 1) %%
+    posicionar(1, 1);
+    dibujar("Score: ");
+    dibujar(score);
+    dibujar("   Vidas: ");
+    dibujar(vidas);
+    dibujar(" ");
+
+    %% ritmo del juego %%
+    esperar(2);
+  }
+
+  %% ================= FIN DEL JUEGO ================= %%
+  limpiar();
+  posicionar(16, 10);
+  dibujar("GAME OVER");
+  posicionar(12, 13);
+  dibujar("Puntaje final: ");
+  dibujar(score);
+  posicionar(6, 16);
+  dibujar("Grupo 5 - Lenguajes y Compiladores");
+}

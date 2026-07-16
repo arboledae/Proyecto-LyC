@@ -54,6 +54,15 @@ static int valor_literal(const char *s) {
     return atoi(s);   /* atoi se detiene en el '.' de los dec */
 }
 
+/* ¿El programa usa alguna cuadrupla con esta operacion? Sirve para
+   emitir solo los runtimes de juego que hagan falta (teclado, espera,
+   aleatorio) y no engordar los programas que no los usan. */
+static int tac_usa(const char *op) {
+    for (const Cuad *c = tac_cuadruplas(); c; c = c->sig)
+        if (strcmp(c->op, op) == 0) return 1;
+    return 0;
+}
+
 /* ── Carga de operandos en HL / DE ──────────────────────────── */
 static void cargar(const char *reg, const char *op) {
     int vi;
@@ -122,6 +131,50 @@ static void traducir(const Cuad *c, int n) {
 
     } else if (strcmp(op, "fin") == 0) {
         /* __fin viene inmediatamente despues del cuerpo */
+
+    /* ── Primitivas de juego (Amstrad CPC) ─────────────────── */
+    } else if (strcmp(op, "cls") == 0) {
+        printf("        ld a,12             ; CHR$(12) = limpiar pantalla\n");
+        printf("        call &BB5A\n");
+
+    } else if (strcmp(op, "locate") == 0) {
+        printf("        ld a,31             ; control 31 = posicionar cursor\n");
+        printf("        call &BB5A\n");
+        cargar("hl", c->arg1);              /* columna */
+        printf("        ld a,l\n");
+        printf("        call &BB5A\n");
+        cargar("hl", c->arg2);              /* fila */
+        printf("        ld a,l\n");
+        printf("        call &BB5A\n");
+
+    } else if (strcmp(op, "draw") == 0) {
+        /* como imprimir pero SIN salto de linea (dibujo en pantalla) */
+        if (c->arg2 && strcmp(c->arg2, "text") == 0) {
+            cargar("hl", c->arg1);
+            printf("        call __prstr\n");
+        } else {
+            cargar("hl", c->arg1);
+            printf("        call __prnum\n");
+        }
+
+    } else if (strcmp(op, "putc") == 0) {
+        cargar("hl", c->arg1);              /* codigo de caracter */
+        printf("        ld a,l\n");
+        printf("        call &BB5A\n");
+
+    } else if (strcmp(op, "wait") == 0) {
+        cargar("hl", c->arg1);              /* numero de cuadros */
+        printf("        call __esperar\n");
+
+    } else if (strcmp(op, "tecla") == 0) {
+        printf("        call __tecla\n");   /* HL = codigo de tecla (0 si nada) */
+        guardar_hl(c->res);
+
+    } else if (strcmp(op, "rand") == 0) {
+        printf("        call __rand\n");    /* HL = aleatorio 0..65535 */
+        cargar("de", c->arg1);              /* DE = limite n */
+        printf("        call __umod\n");    /* HL = HL mod DE (sin signo) */
+        guardar_hl(c->res);
 
     } else if (strcmp(op, "neg") == 0) {
         cargar("hl", c->arg1);
@@ -227,6 +280,10 @@ static void generar_listado(void) {
     printf("inicio_prog:\n");
     printf("        ld a,1\n");
     printf("        call &BC0E          ; modo 1 (limpia la pantalla)\n");
+    if (tac_usa("rand")) {
+        printf("        call &BD0D          ; KL TIME PLEASE -> DE:HL (semilla)\n");
+        printf("        ld (__seed),hl      ; siembra el generador aleatorio\n");
+    }
 
     int n = 1;
     for (const Cuad *c = tac_cuadruplas(); c; c = c->sig, n++)
@@ -417,6 +474,54 @@ static void generar_listado(void) {
     printf("        ret z\n");
     printf("        jp __neghl\n");
 
+    /* ── Runtimes de juego (solo si el programa los usa) ──────── */
+    if (tac_usa("tecla")) {
+        printf("\n; --- HL = codigo de la tecla pulsada (0 si ninguna) ---\n");
+        printf("__tecla:\n");
+        printf("        call &BB09          ; KM READ CHAR (no bloqueante)\n");
+        printf("        jr c,__tecla_si\n");
+        printf("        ld hl,0\n");
+        printf("        ret\n");
+        printf("__tecla_si:\n");
+        printf("        ld l,a\n");
+        printf("        ld h,0\n");
+        printf("        ret\n");
+    }
+
+    if (tac_usa("wait")) {
+        printf("\n; --- espera HL cuadros de video (sincroniza el juego) ---\n");
+        printf("__esperar:\n");
+        printf("        ld a,h\n");
+        printf("        or l\n");
+        printf("        ret z\n");
+        printf("__esperar1:\n");
+        printf("        push hl\n");
+        printf("        call &BD19          ; MC WAIT FLYBACK (un cuadro)\n");
+        printf("        pop hl\n");
+        printf("        dec hl\n");
+        printf("        ld a,h\n");
+        printf("        or l\n");
+        printf("        jr nz,__esperar1\n");
+        printf("        ret\n");
+    }
+
+    if (tac_usa("rand")) {
+        printf("\n; --- HL = siguiente pseudoaleatorio (LCG de 16 bits) ---\n");
+        printf("__rand:\n");
+        printf("        ld hl,(__seed)\n");
+        printf("        ld de,25173\n");
+        printf("        call __mul16        ; HL = semilla * 25173\n");
+        printf("        ld de,13849\n");
+        printf("        add hl,de           ; + 13849  (mod 65536)\n");
+        printf("        ld (__seed),hl\n");
+        printf("        ret\n");
+        printf("\n; --- HL = HL mod DE (sin signo) ---\n");
+        printf("__umod:\n");
+        printf("        call __udiv16       ; HL=cociente, DE=resto\n");
+        printf("        ex de,hl            ; HL = resto\n");
+        printf("        ret\n");
+    }
+
     /* ── Datos: variables, temporales y cadenas ── */
     printf("\n; ==================== datos ================================\n");
     int i = 0;
@@ -424,6 +529,9 @@ static void generar_listado(void) {
         printf("v_%d:    defw 0             ; variable '%s' (%s)\n", i, s->unico, s->tipo);
     for (int t = 1; t <= tac_num_temporales(); t++)
         printf("t_%d:    defw 0             ; temporal t%d\n", t, t);
+
+    if (tac_usa("rand"))
+        printf("__seed: defw 7              ; semilla del generador aleatorio\n");
 
     for (int k = 0; k < n_strs; k++) {
         unsigned char buf[512];

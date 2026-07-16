@@ -1,66 +1,72 @@
 %% ================================================================
-   JUEGO: ADIVINA EL NUMERO
+   JUEGO: ADIVINA EL NUMERO   (version interactiva)
    Grupo 5 - Lenguaje Dummy -> Amstrad CPC (WinAPE)
 
-   Como el lenguaje Dummy no tiene lectura de teclado (solo imprimir),
-   el juego se "auto-juega": la computadora elige un numero secreto
-   del 1 al 100 con un generador pseudoaleatorio (LCG) y luego lo
-   adivina ella misma por busqueda binaria, narrando cada intento.
+   La computadora elige un numero secreto del 1 al 100 (con el nuevo
+   generador aleatorio, sembrado por el reloj del sistema). TU lo
+   adivinas tecleando el numero y pulsando ENTER.
+
+   CONTROLES (solo teclas numericas):
+       0 1 2 3 4 5 6 7 8 9  = escribir el numero
+       ENTER                = probar
+   (cada intento fallido borra lo escrito para el siguiente)
    ================================================================ %%
 inicio {
-  imprimir("=== ADIVINA EL NUMERO ===");
-  imprimir("Secreto entre 1 y 100");
-
-  %% Numero secreto con un LCG:  sem = (sem * 125 + 191) % 256
-     125 = 4*31 + 1  y  191 es impar  => periodo completo 256
-     (condiciones de Hull-Dobell). El maximo intermedio es
-     255*125 + 191 = 32066 < 32767, asi que nunca desborda el
-     entero de 16 bits con signo. %%
-  num sem = 7;
-  sem = (sem * 125 + 191) % 256;
-  num secreto = sem % 100 + 1;
-
-  %% Jugador automatico: busqueda binaria sobre el rango [bajo, alto] %%
-  num bajo = 1;
-  num alto = 100;
+  num secreto = aleatorio(100) + 1;   %% numero secreto 1..100 %%
+  num guess = 0;                       %% numero en construccion %%
   num intentos = 0;
+  num k = 0;
   num ganado = 0;
 
+  limpiar();
+  posicionar(7, 2);
+  dibujar("ADIVINA EL NUMERO (1 a 100)");
+  posicionar(3, 4);
+  dibujar("Teclea digitos 0-9 y pulsa ENTER para probar.");
+
   loop (ganado == 0) {
-    num medio = (bajo + alto) / 2;
-    intentos = intentos + 1;
 
-    imprimir("Pruebo con el numero:");
-    imprimir(medio);
+    %% mostrar el numero que se esta escribiendo %%
+    posicionar(3, 7);
+    dibujar("Tu numero: ");
+    dibujar(guess);
+    dibujar("     ");
 
-    cuando (medio == secreto) {
-      imprimir("Correcto!");
-      ganado = 1;
-    } sino {
-      cuando (medio < secreto) {
-        imprimir("Muy bajo, subo");
-        bajo = medio + 1;
-      } sino {
-        imprimir("Muy alto, bajo");
-        alto = medio - 1;
+    %% esperar a que se pulse una tecla %%
+    k = 0;
+    loop (k == 0) {
+      k = tecla();
+    }
+
+    %% digitos 0..9 (codigos ASCII 48..57): acumular %%
+    cuando (k >= 48 && k <= 57) {
+      guess = guess * 10 + k - 48;
+      cuando (guess > 200) {
+        guess = k - 48;          %% reinicia si se pasa de largo %%
       }
     }
 
-    %% Pausa visual (~1-2 s en el Amstrad CPC) al terminar cada vuelta,
-       como si el jugador "verificara" antes del siguiente intento.
-       El lenguaje no tiene instruccion de espera, asi que se usa un
-       bucle de espera ocupada: contar hasta un tope grande consume
-       tiempo real de CPU en el Z80. El tope 20000 (< 32767) equivale
-       a ~1.5 s; subelo o bajalo para ajustar la duracion. %%
-    num espera = 0;
-    loop (espera < 20000) {
-      espera = espera + 1;
+    %% ENTER (codigo 13) = probar el numero %%
+    cuando (k == 13) {
+      intentos = intentos + 1;
+      posicionar(3, 9);
+      cuando (guess == secreto) {
+        dibujar("CORRECTO! Lo adivinaste.        ");
+        ganado = 1;
+      } sino {
+        cuando (guess < secreto) {
+          dibujar("Muy bajo. Prueba mas alto.      ");
+        } sino {
+          dibujar("Muy alto. Prueba mas bajo.      ");
+        }
+        guess = 0;               %% listo para el siguiente intento %%
+      }
     }
   }
 
-  imprimir("El numero secreto era:");
-  imprimir(secreto);
-  imprimir("Lo adivine en intentos:");
-  imprimir(intentos);
-  imprimir("=== FIN DEL JUEGO ===");
+  posicionar(3, 12);
+  dibujar("Numero de intentos: ");
+  dibujar(intentos);
+  posicionar(3, 14);
+  dibujar("=== FIN DEL JUEGO ===");
 }

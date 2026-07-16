@@ -33,6 +33,14 @@ ESPACIOS        [ \t\r\n]+
 "loop"            { LEXLOG("[Lexico] Linea %d: Palabra clave 'loop'\n",     yylineno); return KW_LOOP; }
 "imprimir"        { LEXLOG("[Lexico] Linea %d: Palabra clave 'imprimir'\n", yylineno); return KW_IMPRIMIR; }
 "retornar"        { LEXLOG("[Lexico] Linea %d: Palabra clave 'retornar'\n", yylineno); return KW_RETORNAR; }
+
+"limpiar"         { LEXLOG("[Lexico] Linea %d: Palabra clave 'limpiar'\n",    yylineno); return KW_LIMPIAR; }
+"posicionar"      { LEXLOG("[Lexico] Linea %d: Palabra clave 'posicionar'\n", yylineno); return KW_POSICIONAR; }
+"dibujar"         { LEXLOG("[Lexico] Linea %d: Palabra clave 'dibujar'\n",    yylineno); return KW_DIBUJAR; }
+"pintar"          { LEXLOG("[Lexico] Linea %d: Palabra clave 'pintar'\n",     yylineno); return KW_PINTAR; }
+"esperar"         { LEXLOG("[Lexico] Linea %d: Palabra clave 'esperar'\n",    yylineno); return KW_ESPERAR; }
+"tecla"           { LEXLOG("[Lexico] Linea %d: Palabra clave 'tecla'\n",      yylineno); return KW_TECLA; }
+"aleatorio"       { LEXLOG("[Lexico] Linea %d: Palabra clave 'aleatorio'\n",  yylineno); return KW_ALEATORIO; }
 "num"             { LEXLOG("[Lexico] Linea %d: Tipo de dato 'num'\n",       yylineno); return KW_NUM; }
 "dec"             { LEXLOG("[Lexico] Linea %d: Tipo de dato 'dec'\n",       yylineno); return KW_DEC; }
 "text"            { LEXLOG("[Lexico] Linea %d: Tipo de dato 'text'\n",      yylineno); return KW_TEXT; }
@@ -60,6 +68,7 @@ ESPACIOS        [ \t\r\n]+
 "="               { LEXLOG("[Lexico] Linea %d: Operador OP_ASIGNACION (=)\n", yylineno); return OP_ASIGNACION; }
 
 ";"               { LEXLOG("[Lexico] Linea %d: Delimitador DELIM_PUNTO_COMA\n", yylineno); return DELIM_PUNTO_COMA; }
+","               { LEXLOG("[Lexico] Linea %d: Delimitador DELIM_COMA\n",       yylineno); return DELIM_COMA; }
 "("               { LEXLOG("[Lexico] Linea %d: Delimitador DELIM_PAR_IZQ\n",   yylineno); return DELIM_PAR_IZQ; }
 ")"               { LEXLOG("[Lexico] Linea %d: Delimitador DELIM_PAR_DER\n",   yylineno); return DELIM_PAR_DER; }
 "{"               { LEXLOG("[Lexico] Linea %d: Delimitador DELIM_LLAVE_IZQ\n", yylineno); return DELIM_LLAVE_IZQ; }

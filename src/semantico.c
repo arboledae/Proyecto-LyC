@@ -139,6 +139,22 @@ static const char* inferir_tipo(NodoAST *n) {
             return NULL;
         }
 
+        case NODO_LEER_TECLA:
+            /* tecla() devuelve el codigo de la tecla leida (0 si ninguna). */
+            return "num";
+
+        case NODO_ALEATORIO: {
+            /* aleatorio(n) exige un limite numerico y devuelve 'num'. */
+            const char *t1 = inferir_tipo(n->izq);
+            if (!t1) return NULL;
+            if (!es_numerico(t1)) {
+                agregar_error(n->linea,
+                    "aleatorio(n) requiere un limite numerico (recibido '%s').", t1);
+                return NULL;
+            }
+            return "num";
+        }
+
         case NODO_OP_UNARIO: {
             const char *op = n->str_val;
             const char *t1 = inferir_tipo(n->izq);
@@ -258,6 +274,43 @@ static void visitar(NodoAST *n) {
         case NODO_RETORNO:
             if (n->izq) inferir_tipo(n->izq);
             break;
+
+        /* ── Primitivas de juego ─────────────────────────────── */
+        case NODO_LIMPIAR:
+            /* limpiar() no lleva argumentos: nada que validar. */
+            break;
+
+        case NODO_POSICIONAR: {
+            const char *tx = inferir_tipo(n->izq);
+            const char *ty = inferir_tipo(n->der);
+            if (tx && !es_numerico(tx))
+                agregar_error(n->linea,
+                    "posicionar(x, y): la columna debe ser numerica (recibido '%s').", tx);
+            if (ty && !es_numerico(ty))
+                agregar_error(n->linea,
+                    "posicionar(x, y): la fila debe ser numerica (recibido '%s').", ty);
+            break;
+        }
+
+        case NODO_DIBUJAR:
+            inferir_tipo(n->izq);   /* imprime sin salto: acepta cualquier valor */
+            break;
+
+        case NODO_PINTAR: {
+            const char *tc = inferir_tipo(n->izq);
+            if (tc && !es_numerico(tc))
+                agregar_error(n->linea,
+                    "pintar(codigo): el codigo de caracter debe ser numerico (recibido '%s').", tc);
+            break;
+        }
+
+        case NODO_ESPERAR: {
+            const char *te = inferir_tipo(n->izq);
+            if (te && !es_numerico(te))
+                agregar_error(n->linea,
+                    "esperar(n): el numero de cuadros debe ser numerico (recibido '%s').", te);
+            break;
+        }
 
         default:
             break;

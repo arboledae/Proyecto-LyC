@@ -126,6 +126,20 @@ static char* gen_expr(NodoAST *n, const char **tipo_out) {
             return t;
         }
 
+        case NODO_LEER_TECLA: {
+            char *t = nuevo_temp();
+            emitir("tecla", NULL, NULL, t);
+            return t;
+        }
+
+        case NODO_ALEATORIO: {
+            char *a = gen_expr(n->izq, NULL);
+            char *t = nuevo_temp();
+            emitir("rand", a, NULL, t);
+            free(a);
+            return t;
+        }
+
         default:
             return dupstr("0");
     }
@@ -154,6 +168,9 @@ static const char* tipo_de(NodoAST *n) {
         }
         case NODO_OP_UNARIO:
             return (strcmp(n->str_val,"!")==0) ? "booleano" : tipo_de(n->izq);
+        case NODO_LEER_TECLA:
+        case NODO_ALEATORIO:
+            return "num";
         default:
             return "num";
     }
@@ -251,6 +268,41 @@ static void gen_sent(NodoAST *n) {
             break;
         }
 
+        /* ── Primitivas de juego ─────────────────────────────── */
+        case NODO_LIMPIAR:
+            emitir("cls", NULL, NULL, NULL);
+            break;
+
+        case NODO_POSICIONAR: {
+            char *x = gen_expr(n->izq, NULL);
+            char *y = gen_expr(n->der, NULL);
+            emitir("locate", x, y, NULL);
+            free(x); free(y);
+            break;
+        }
+
+        case NODO_DIBUJAR: {
+            const char *tipo = "num";
+            char *v = gen_expr(n->izq, &tipo);
+            emitir("draw", v, tipo, NULL);
+            free(v);
+            break;
+        }
+
+        case NODO_PINTAR: {
+            char *v = gen_expr(n->izq, NULL);
+            emitir("putc", v, NULL, NULL);
+            free(v);
+            break;
+        }
+
+        case NODO_ESPERAR: {
+            char *v = gen_expr(n->izq, NULL);
+            emitir("wait", v, NULL, NULL);
+            free(v);
+            break;
+        }
+
         default:
             break;
     }
@@ -292,6 +344,20 @@ void tac_formatear(const Cuad *c, char *buf, int tam) {
         snprintf(buf, tam, "retornar%s%s", c->arg1 ? " " : "", c->arg1 ? c->arg1 : "");
     else if (strcmp(op, "fin") == 0)
         snprintf(buf, tam, "fin");
+    else if (strcmp(op, "cls") == 0)
+        snprintf(buf, tam, "limpiar");
+    else if (strcmp(op, "locate") == 0)
+        snprintf(buf, tam, "posicionar %s, %s", c->arg1, c->arg2);
+    else if (strcmp(op, "draw") == 0)
+        snprintf(buf, tam, "dibujar %s", c->arg1);
+    else if (strcmp(op, "putc") == 0)
+        snprintf(buf, tam, "pintar %s", c->arg1);
+    else if (strcmp(op, "wait") == 0)
+        snprintf(buf, tam, "esperar %s", c->arg1);
+    else if (strcmp(op, "tecla") == 0)
+        snprintf(buf, tam, "%s = tecla()", c->res);
+    else if (strcmp(op, "rand") == 0)
+        snprintf(buf, tam, "%s = aleatorio(%s)", c->res, c->arg1);
     else   /* operacion binaria */
         snprintf(buf, tam, "%s = %s %s %s", c->res, c->arg1, op, c->arg2);
 }

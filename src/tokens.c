@@ -9,6 +9,13 @@ const char* nombre_token(int token) {
         case KW_LOOP:            return "KW_LOOP";
         case KW_IMPRIMIR:        return "KW_IMPRIMIR";
         case KW_RETORNAR:        return "KW_RETORNAR";
+        case KW_LIMPIAR:         return "KW_LIMPIAR";
+        case KW_POSICIONAR:      return "KW_POSICIONAR";
+        case KW_DIBUJAR:         return "KW_DIBUJAR";
+        case KW_PINTAR:          return "KW_PINTAR";
+        case KW_ESPERAR:         return "KW_ESPERAR";
+        case KW_TECLA:           return "KW_TECLA";
+        case KW_ALEATORIO:       return "KW_ALEATORIO";
         case KW_NUM:             return "KW_NUM";
         case KW_DEC:             return "KW_DEC";
         case KW_TEXT:            return "KW_TEXT";
@@ -33,6 +40,7 @@ const char* nombre_token(int token) {
         case OP_OR:              return "OP_OR";
         case OP_NOT:             return "OP_NOT";
         case DELIM_PUNTO_COMA:   return "DELIM_PUNTO_COMA";
+        case DELIM_COMA:         return "DELIM_COMA";
         case DELIM_PAR_IZQ:      return "DELIM_PAR_IZQ";
         case DELIM_PAR_DER:      return "DELIM_PAR_DER";
         case DELIM_LLAVE_IZQ:    return "DELIM_LLAVE_IZQ";

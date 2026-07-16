@@ -62,12 +62,14 @@ int ends_with_g5z80(const char *filename) {
 %token KW_INICIO KW_CUANDO KW_SINO KW_LOOP
 %token KW_NUM KW_DEC KW_TEXT
 %token KW_IMPRIMIR KW_RETORNAR
+%token KW_LIMPIAR KW_POSICIONAR KW_DIBUJAR KW_PINTAR KW_ESPERAR
+%token KW_TECLA KW_ALEATORIO
 %token OP_ASIGNACION OP_SUMA OP_RESTA OP_MULT OP_DIV OP_MOD
 %token OP_IGUAL OP_DIFERENTE OP_MAYOR OP_MENOR
 %token OP_MAYOR_IGUAL OP_MENOR_IGUAL
 %token OP_AND OP_OR OP_NOT
 %token DELIM_PAR_IZQ DELIM_PAR_DER
-%token DELIM_LLAVE_IZQ DELIM_LLAVE_DER DELIM_PUNTO_COMA
+%token DELIM_LLAVE_IZQ DELIM_LLAVE_DER DELIM_PUNTO_COMA DELIM_COMA
 %token TOKEN_COMENT TOKEN_ERROR
 
 /* Tokens con valor semantico */
@@ -80,6 +82,7 @@ int ends_with_g5z80(const char *filename) {
 /* Tipo de retorno de las reglas gramaticales que construyen nodos */
 %type <nodo> sentencias sentencia declaracion asignacion
 %type <nodo> condicional ciclo impresion retorno
+%type <nodo> limpiar posicionar dibujar pintar esperar
 %type <nodo> condicion expresion
 %type <str>  tipo operador_rel
 
@@ -186,6 +189,11 @@ sentencia:
     | ciclo                         { $$ = $1; }
     | impresion   DELIM_PUNTO_COMA  { $$ = $1; }
     | retorno     DELIM_PUNTO_COMA  { $$ = $1; }
+    | limpiar     DELIM_PUNTO_COMA  { $$ = $1; }
+    | posicionar  DELIM_PUNTO_COMA  { $$ = $1; }
+    | dibujar     DELIM_PUNTO_COMA  { $$ = $1; }
+    | pintar      DELIM_PUNTO_COMA  { $$ = $1; }
+    | esperar     DELIM_PUNTO_COMA  { $$ = $1; }
     ;
 
 declaracion:
@@ -238,6 +246,42 @@ impresion:
       KW_IMPRIMIR DELIM_PAR_IZQ expresion DELIM_PAR_DER
     {
         $$ = nodo_impresion($3);
+    }
+    ;
+
+/* ── Primitivas de juego (Amstrad CPC) ─────────────────────── */
+limpiar:
+      KW_LIMPIAR DELIM_PAR_IZQ DELIM_PAR_DER
+    {
+        $$ = nodo_limpiar();
+    }
+    ;
+
+posicionar:
+      KW_POSICIONAR DELIM_PAR_IZQ expresion DELIM_COMA expresion DELIM_PAR_DER
+    {
+        $$ = nodo_posicionar($3, $5);
+    }
+    ;
+
+dibujar:
+      KW_DIBUJAR DELIM_PAR_IZQ expresion DELIM_PAR_DER
+    {
+        $$ = nodo_dibujar($3);
+    }
+    ;
+
+pintar:
+      KW_PINTAR DELIM_PAR_IZQ expresion DELIM_PAR_DER
+    {
+        $$ = nodo_pintar($3);
+    }
+    ;
+
+esperar:
+      KW_ESPERAR DELIM_PAR_IZQ expresion DELIM_PAR_DER
+    {
+        $$ = nodo_esperar($3);
     }
     ;
 
@@ -301,6 +345,9 @@ expresion:
     | LIT_TEXT                                 { $$ = nodo_texto($1);     }
     | LIT_BOOLEANO                             { $$ = nodo_booleano($1);  }
     | IDENTIFICADOR                            { $$ = nodo_id($1);        }
+    | KW_TECLA DELIM_PAR_IZQ DELIM_PAR_DER     { $$ = nodo_leer_tecla();  }
+    | KW_ALEATORIO DELIM_PAR_IZQ expresion DELIM_PAR_DER
+                                               { $$ = nodo_aleatorio($3); }
     ;
 
 %%
