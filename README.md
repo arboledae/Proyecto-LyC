@@ -332,7 +332,3 @@ rm -f src/lex.yy.c src/parser.tab.c src/parser.tab.h compilador analizador_lexic
 ```
 
 ---
-
-## 👥 Créditos
-
-Universidad Nacional Mayor de San Marcos · Lenguajes y Compiladores · **Grupo 5**
