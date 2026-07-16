@@ -303,6 +303,10 @@ static void gen_sent(NodoAST *n) {
             break;
         }
 
+        case NODO_SPRITES:
+            emitir("sprites", NULL, NULL, NULL);
+            break;
+
         default:
             break;
     }
@@ -354,6 +358,8 @@ void tac_formatear(const Cuad *c, char *buf, int tam) {
         snprintf(buf, tam, "pintar %s", c->arg1);
     else if (strcmp(op, "wait") == 0)
         snprintf(buf, tam, "esperar %s", c->arg1);
+    else if (strcmp(op, "sprites") == 0)
+        snprintf(buf, tam, "sprites");
     else if (strcmp(op, "tecla") == 0)
         snprintf(buf, tam, "%s = tecla()", c->res);
     else if (strcmp(op, "rand") == 0)

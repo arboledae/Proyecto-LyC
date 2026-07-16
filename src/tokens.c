@@ -16,6 +16,7 @@ const char* nombre_token(int token) {
         case KW_ESPERAR:         return "KW_ESPERAR";
         case KW_TECLA:           return "KW_TECLA";
         case KW_ALEATORIO:       return "KW_ALEATORIO";
+        case KW_SPRITES:         return "KW_SPRITES";
         case KW_NUM:             return "KW_NUM";
         case KW_DEC:             return "KW_DEC";
         case KW_TEXT:            return "KW_TEXT";

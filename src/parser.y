@@ -62,7 +62,7 @@ int ends_with_g5z80(const char *filename) {
 %token KW_INICIO KW_CUANDO KW_SINO KW_LOOP
 %token KW_NUM KW_DEC KW_TEXT
 %token KW_IMPRIMIR KW_RETORNAR
-%token KW_LIMPIAR KW_POSICIONAR KW_DIBUJAR KW_PINTAR KW_ESPERAR
+%token KW_LIMPIAR KW_POSICIONAR KW_DIBUJAR KW_PINTAR KW_ESPERAR KW_SPRITES
 %token KW_TECLA KW_ALEATORIO
 %token OP_ASIGNACION OP_SUMA OP_RESTA OP_MULT OP_DIV OP_MOD
 %token OP_IGUAL OP_DIFERENTE OP_MAYOR OP_MENOR
@@ -82,7 +82,7 @@ int ends_with_g5z80(const char *filename) {
 /* Tipo de retorno de las reglas gramaticales que construyen nodos */
 %type <nodo> sentencias sentencia declaracion asignacion
 %type <nodo> condicional ciclo impresion retorno
-%type <nodo> limpiar posicionar dibujar pintar esperar
+%type <nodo> limpiar posicionar dibujar pintar esperar sprites
 %type <nodo> condicion expresion
 %type <str>  tipo operador_rel
 
@@ -194,6 +194,7 @@ sentencia:
     | dibujar     DELIM_PUNTO_COMA  { $$ = $1; }
     | pintar      DELIM_PUNTO_COMA  { $$ = $1; }
     | esperar     DELIM_PUNTO_COMA  { $$ = $1; }
+    | sprites     DELIM_PUNTO_COMA  { $$ = $1; }
     ;
 
 declaracion:
@@ -282,6 +283,13 @@ esperar:
       KW_ESPERAR DELIM_PAR_IZQ expresion DELIM_PAR_DER
     {
         $$ = nodo_esperar($3);
+    }
+    ;
+
+sprites:
+      KW_SPRITES DELIM_PAR_IZQ DELIM_PAR_DER
+    {
+        $$ = nodo_sprites();
     }
     ;
 

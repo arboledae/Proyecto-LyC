@@ -155,6 +155,10 @@ NodoAST* nodo_aleatorio(NodoAST *expr) {
     return n;
 }
 
+NodoAST* nodo_sprites(void) {
+    return nuevo_nodo(NODO_SPRITES);
+}
+
 /* ── Impresión ──────────────────────────────────────────────── */
 
 static void sangria(int nivel) {
@@ -302,6 +306,10 @@ void imprimir_ast(NodoAST *nodo, int nivel) {
         case NODO_ALEATORIO:
             printf("[ALEATORIO]\n");
             imprimir_ast(nodo->izq, nivel + 1);
+            break;
+
+        case NODO_SPRITES:
+            printf("[SPRITES]\n");
             break;
     }
 }

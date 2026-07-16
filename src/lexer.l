@@ -41,6 +41,7 @@ ESPACIOS        [ \t\r\n]+
 "esperar"         { LEXLOG("[Lexico] Linea %d: Palabra clave 'esperar'\n",    yylineno); return KW_ESPERAR; }
 "tecla"           { LEXLOG("[Lexico] Linea %d: Palabra clave 'tecla'\n",      yylineno); return KW_TECLA; }
 "aleatorio"       { LEXLOG("[Lexico] Linea %d: Palabra clave 'aleatorio'\n",  yylineno); return KW_ALEATORIO; }
+"sprites"         { LEXLOG("[Lexico] Linea %d: Palabra clave 'sprites'\n",    yylineno); return KW_SPRITES; }
 "num"             { LEXLOG("[Lexico] Linea %d: Tipo de dato 'num'\n",       yylineno); return KW_NUM; }
 "dec"             { LEXLOG("[Lexico] Linea %d: Tipo de dato 'dec'\n",       yylineno); return KW_DEC; }
 "text"            { LEXLOG("[Lexico] Linea %d: Tipo de dato 'text'\n",      yylineno); return KW_TEXT; }

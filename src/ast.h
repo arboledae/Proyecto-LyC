@@ -30,7 +30,8 @@ typedef enum {
     NODO_PINTAR,         /* pintar(codigo)       -> caracter por codigo  */
     NODO_ESPERAR,        /* esperar(n)           -> espera n cuadros     */
     NODO_LEER_TECLA,     /* tecla()              -> lee teclado (expr)   */
-    NODO_ALEATORIO       /* aleatorio(n)         -> azar 0..n-1 (expr)   */
+    NODO_ALEATORIO,      /* aleatorio(n)         -> azar 0..n-1 (expr)   */
+    NODO_SPRITES         /* sprites()            -> define sprites (CPC) */
 } TipoNodo;
 
 /* ── Estructura del nodo ────────────────────────────────────── */
@@ -69,6 +70,7 @@ NodoAST* nodo_pintar     (NodoAST *expr);
 NodoAST* nodo_esperar    (NodoAST *expr);
 NodoAST* nodo_leer_tecla (void);
 NodoAST* nodo_aleatorio  (NodoAST *expr);
+NodoAST* nodo_sprites    (void);
 
 /* ── Utilidades ─────────────────────────────────────────────── */
 void imprimir_ast(NodoAST *nodo, int nivel);

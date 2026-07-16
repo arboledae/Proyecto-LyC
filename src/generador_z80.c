@@ -166,6 +166,9 @@ static void traducir(const Cuad *c, int n) {
         cargar("hl", c->arg1);              /* numero de cuadros */
         printf("        call __esperar\n");
 
+    } else if (strcmp(op, "sprites") == 0) {
+        printf("        call __defsprites\n");  /* define los caracteres 240..243 */
+
     } else if (strcmp(op, "tecla") == 0) {
         printf("        call __tecla\n");   /* HL = codigo de tecla (0 si nada) */
         guardar_hl(c->res);
@@ -505,6 +508,29 @@ static void generar_listado(void) {
         printf("        ret\n");
     }
 
+    if (tac_usa("sprites")) {
+        printf("\n; --- define los caracteres de usuario 240..243 (CPC) ---\n");
+        printf("; reserva 240..255 con &BBAB TXT SET M TABLE (DE=primer car,\n");
+        printf("; HL=tabla de 8 bytes/car) y luego &BBA8 TXT SET MATRIX por sprite\n");
+        printf("__defsprites:\n");
+        printf("        ld de,240\n");
+        printf("        ld hl,__mtable\n");
+        printf("        call &BBAB          ; hace 240..255 definibles por usuario\n");
+        printf("        ld a,240\n");
+        printf("        ld hl,__spr_claude\n");
+        printf("        call &BBA8          ; 240 = muneco de Claude (nave)\n");
+        printf("        ld a,241\n");
+        printf("        ld hl,__spr_ast1\n");
+        printf("        call &BBA8          ; 241 = asteroide pequeno\n");
+        printf("        ld a,242\n");
+        printf("        ld hl,__spr_ast2\n");
+        printf("        call &BBA8          ; 242 = asteroide mediano\n");
+        printf("        ld a,243\n");
+        printf("        ld hl,__spr_ast3\n");
+        printf("        call &BBA8          ; 243 = asteroide grande\n");
+        printf("        ret\n");
+    }
+
     if (tac_usa("rand")) {
         printf("\n; --- HL = siguiente pseudoaleatorio (LCG de 16 bits) ---\n");
         printf("__rand:\n");
@@ -532,6 +558,16 @@ static void generar_listado(void) {
 
     if (tac_usa("rand"))
         printf("__seed: defw 7              ; semilla del generador aleatorio\n");
+
+    if (tac_usa("sprites")) {
+        printf("; --- tabla de matrices de usuario (240..255 -> 16*8 bytes) ---\n");
+        printf("__mtable: defs 128\n");
+        printf("; --- matrices 8x8 de los sprites (bit 7 = pixel izquierdo) ---\n");
+        printf("__spr_claude: defb &3C,&42,&5A,&42,&3C,&18,&3C,&24  ; muneco de Claude\n");
+        printf("__spr_ast1:   defb &00,&00,&18,&3C,&3C,&18,&00,&00  ; asteroide pequeno\n");
+        printf("__spr_ast2:   defb &00,&3C,&7E,&7E,&7E,&7E,&3C,&00  ; asteroide mediano\n");
+        printf("__spr_ast3:   defb &3C,&7E,&FF,&FF,&FF,&FF,&7E,&3C  ; asteroide grande\n");
+    }
 
     for (int k = 0; k < n_strs; k++) {
         unsigned char buf[512];

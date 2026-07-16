@@ -312,6 +312,10 @@ static void visitar(NodoAST *n) {
             break;
         }
 
+        case NODO_SPRITES:
+            /* sprites() no lleva argumentos: nada que validar. */
+            break;
+
         default:
             break;
     }

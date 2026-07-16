@@ -1,24 +1,26 @@
 %% ================================================================
-   SPACEWAR  -  Nave, asteroides y disparos
+   SPACEWAR  -  Claude contra los asteroides
    Grupo 5 - Lenguaje Dummy  ->  Amstrad CPC (WinAPE)
 
-   Pilotas una nave en la parte inferior. Los asteroides caen desde
-   arriba: dispara para destruirlos (+5 pts) o esquivalos (+1 pt al
-   pasar). Si un asteroide te golpea pierdes una vida. Con 0 vidas:
-   GAME OVER. El juego acelera con el tiempo.
+   Pilotas al muneco de Claude en la parte inferior y disparas a los
+   asteroides, que aparecen en TRES tamanos distintos. Destruir uno
+   da mas puntos cuanto mas grande; si te golpea pierdes una vida.
+   Con 0 vidas: GAME OVER. El juego acelera con el tiempo.
 
    CONTROLES (3 teclas):
        O  = mover a la izquierda
        P  = mover a la derecha
        ESPACIO = disparar
 
-   Primitivas usadas: limpiar, posicionar, dibujar, pintar, esperar,
-   tecla, aleatorio.
+   Sprites (caracteres definidos por el usuario, via sprites()):
+       240 = muneco de Claude (nave)
+       241 = asteroide pequeno   242 = mediano   243 = grande
    ================================================================ %%
 inicio {
   num nave = 20;      %% columna de la nave (1..40)              %%
   num ax = 10;        %% columna del asteroide                    %%
   num ay = 1;         %% fila del asteroide                       %%
+  num tam = 1;        %% tamano del asteroide (1..3)              %%
   num bx = 0;         %% columna de la bala                       %%
   num by = 0;         %% fila de la bala                          %%
   num bactivo = 0;    %% 1 si hay una bala en vuelo               %%
@@ -29,20 +31,31 @@ inicio {
   num k = 0;          %% tecla leida                              %%
   num jugando = 1;    %% 1 mientras el juego sigue                %%
 
+  sprites();          %% define al muneco de Claude y los asteroides %%
+
   %% ---------------- Pantalla de titulo ---------------- %%
   limpiar();
   posicionar(13, 3);
   dibujar("S P A C E W A R");
   posicionar(6, 6);
   dibujar("O = izq   P = der   ESPACIO = disparar");
-  posicionar(8, 9);
-  dibujar("Destruye o esquiva los asteroides!");
-  posicionar(8, 12);
+  posicionar(4, 9);
+  dibujar("Claude: ");
+  pintar(240);
+  posicionar(4, 11);
+  dibujar("Asteroides: ");
+  pintar(241);
+  dibujar(" ");
+  pintar(242);
+  dibujar(" ");
+  pintar(243);
+  posicionar(8, 14);
   dibujar("Preparate...");
   esperar(150);
 
-  %% primera columna del asteroide, al azar (2..39) %%
+  %% primer asteroide: columna (2..39) y tamano (1..3) al azar %%
   ax = aleatorio(38) + 2;
+  tam = aleatorio(3) + 1;
   limpiar();
 
   %% ================= BUCLE PRINCIPAL ================= %%
@@ -88,12 +101,13 @@ inicio {
       cuando (bactivo == 1) {
         cuando (bx == ax) {
           cuando (by == ay) {
-            score = score + 5;
+            score = score + tam + 2;      %% grande = mas puntos %%
             bactivo = 0;
             posicionar(ax, ay);
             dibujar(" ");
             ay = 1;
             ax = aleatorio(38) + 2;
+            tam = aleatorio(3) + 1;
             cuando (vel > 5) {
               vel = vel - 1;
             }
@@ -119,10 +133,11 @@ inicio {
           }
         }
       }
-      %% paso el fondo: reaparece arriba y suma punto %%
+      %% paso el fondo: reaparece arriba con nuevo tamano %%
       cuando (ay > 23) {
         ay = 1;
         ax = aleatorio(38) + 2;
+        tam = aleatorio(3) + 1;
         score = score + 1;
         cuando (vel > 5) {
           vel = vel - 1;
@@ -132,7 +147,7 @@ inicio {
 
     %% --- Dibujo de la escena --- %%
     posicionar(ax, ay);
-    pintar(42);                         %% '*' = asteroide %%
+    pintar(240 + tam);                  %% asteroide segun su tamano %%
 
     cuando (bactivo == 1) {
       posicionar(bx, by);
@@ -140,7 +155,7 @@ inicio {
     }
 
     posicionar(nave, 23);
-    pintar(94);                         %% '^' = nave      %%
+    pintar(240);                        %% muneco de Claude %%
 
     %% marcador (fila 1) %%
     posicionar(1, 1);

@@ -133,6 +133,9 @@ static void emit_nodo(NodoAST *n, int d) {
             printf("%d|ALEATORIO\n", d);
             emit_nodo(n->izq, d + 1);
             break;
+        case NODO_SPRITES:
+            printf("%d|SPRITES\n", d);
+            break;
     }
 }
 
